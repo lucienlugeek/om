@@ -143,20 +143,16 @@
         getMap: function () {
             return this._map;
         },
-        removeLayer: function (layerName) {
-            this._map.removeLayer(this.getLayer(layerName));
-            this._layer[layerName] = null;
-        },
         /**
          * @desc 添加层
          */
-        addLayer: function (layerName, vector) {
-            if (this._layer[layerName]) {
+        addLayer: function (layerName, layerObj) {
+            if (this.getLayer(layerName)) {
                 return;
             }
-            var _vector = this._layer[layerName] = vector;
-            if (!_vector) {
-                _vector = this._layer[layerName] = new ol.layer.Vector({ //存放标注点的layer
+            var _layer = this._layer[layerName] = layerObj;
+            if (!_layer) {//如果没有指定层，则创建默认值 (marker)
+                _layer = this._layer[layerName] = new ol.layer.Vector({ //存放标注点的layer
                     source: new ol.source.Vector({
                         features: [],
                         overlaps: false//是否允许重叠
@@ -172,16 +168,22 @@
                     }
                 });
             }
-            this._map.addLayer(_vector);
+            this._map.addLayer(_layer);
+            return _layer;
         },
         /**
          * @desc 获取层
          */
-        getLayer: function (layerName, init) {
-            if (init) {
-                this.addLayer(layerName);
-            }
+        getLayer: function (layerName) {
             return this._layer[layerName];
+        },
+        /**
+         * @desc 移除layer对象
+         */
+        removeLayer: function (layerName) {
+            this._map.removeLayer(this.getLayer(layerName));
+            this._layer[layerName] = null;
+            delete this._layer[layerName];
         },
         /**
          * @desc 向地图添加marker标记
@@ -195,9 +197,11 @@
                 return;
             }
             var self = this;
-            var _layer = self.getLayer(option.layer, true);
+            var _layer = self.getLayer(option.layer);
+            if (!_layer) {
+                _layer = self.addLayer(option.layer);
+            }
             this.addLayerListener(_layer);
-
             var fea = new ol.Feature({
                 geometry: new ol.geom.Point(option.position),
                 anchor: option.anchor,
@@ -262,47 +266,42 @@
                 distance: 100,
                 source: source
             });
-            var styleCache = {};
-            var _layer = self.getLayer();
-            if (!_layer) {
-                _layer = self._layer[la] = new ol.layer.Vector({
-                    source: clusterSource,
-                    style: function (feature) {
-                        var feas = feature.get('features'), i = 0, normalSize = 0;
-                        var size = feas.length;
-                        for (; i < size; i++) {
-                            normalSize = normalSize + (feas[i].getProperties().status)
-                        }
-                        var rO, rI;
-                        if (size >= 100) {
-                            rO = 44;
-                            rI = 33;
-                        } else if (size >= 10 && size <= 99) {
-                            rO = 32;
-                            rI = 24;
-                        } else {
-                            rO = 28;
-                            rI = 18;
-                        }
-                        style = new ol.style.Style({
-                            image: new ol.style.Icon({
-                                img: dcanvas($('canvas.process').clone().show().get(0), {
-                                    'centerX': '45',
-                                    'centerY': '45',
-                                    'radiusOutside': rO,
-                                    'radiusInside': rI,
-                                    'normalSize': normalSize,
-                                    'size': size
-                                }),
-                                imgSize: [90, 90]
-                            }),
-                        });
-                        return style;
+            var _layer = new ol.layer.Vector({
+                source: clusterSource,
+                style: function (feature) {
+                    var feas = feature.get('features'), i = 0, normalSize = 0;
+                    var size = feas.length;
+                    for (; i < size; i++) {
+                        normalSize = normalSize + (feas[i].getProperties().status)
                     }
-                });
-                self.addLayer(_layer);
-                _layer.setVisible(vi);
-            }
+                    var rO, rI;
+                    if (size >= 100) {
+                        rO = 44;
+                        rI = 33;
+                    } else if (size >= 10 && size <= 99) {
+                        rO = 32;
+                        rI = 24;
+                    } else {
+                        rO = 28;
+                        rI = 18;
+                    }
+                    style = new ol.style.Style({
+                        image: new ol.style.Icon({
+                            img: dcanvas($('canvas.process').clone().show().get(0), {
+                                'centerX': '45',
+                                'centerY': '45',
+                                'radiusOutside': rO,
+                                'radiusInside': rI,
+                                'normalSize': normalSize,
+                                'size': size
+                            }),
+                            imgSize: [90, 90]
+                        }),
+                    });
+                    return style;
+                }
+            });
+            self.addLayer(la, _layer).setVisible(vi);
         },
         /**
          * @desc 添加覆盖元素
@@ -355,12 +354,12 @@
          * @desc 移除指定layer，从而移除依载该layer的所有marker
          * @param arg
          */
-        removeMarkerByLayer: function (arg) {
-            if (typeof arg === 'undefined') {
+        removeMarkerByLayer: function (layerName) {
+            if (typeof layerName === 'undefined') {
                 console.error('请传入layer名称');
                 return;
             }
-            var layer = this.getLayer(arg);
+            var layer = this.getLayer(layerName);
             if (layer) {
                 layer.getSource().clear();
             }
@@ -430,8 +429,7 @@
             var _drawLayer = new ol.layer.Vector({
                 source: source
             });
-            self._layer._drawLayer = _drawLayer;
-            self.addLayer(_drawLayer);
+            self.addLayer('_drawLayer', _drawLayer);
             // self._featureOverlay = new ol.layer.Vector({ //画图所用的layer对象
             //     source: new ol.source.Vector({
             //         features: features
@@ -499,17 +497,16 @@
         * 路况图层
         *'beilun:TRANETROAD','FEATUREGUI,FCODE,FNAME,FSCALE,DISPLAY,GEOMETRY'
         */
-        adminLayerVisibility: function (typeName, propertyName) {
+        adminLayerVisibility: function (typeName, propertyName, callbackName) {
             var self = this;
             //wfs回调方法
-            function loadWfs(res) {
+            window[callbackName] = function (res) {
                 var myprojection = self.initParam.projection;
                 var format = new ol.format.GeoJSON();
                 self.roadFeatures = format.readFeatures(res, { featureProjection: myprojection });
                 self.getLayer('roadLayer').getSource().addFeatures(self.roadFeatures);
                 // adminWfsLayer.getSource().addFeatures(self.roadFeatures);
-            }
-            window.loadWfs = loadWfs;
+            };
             function getFeature(options) {
                 $.ajax('http://192.168.3.233:8888/geoserver/beilun/wfs', {
                     type: 'GET',
@@ -540,7 +537,7 @@
                 srid: 'EPSG:4326',
                 // filter:'<Filter xmlns="http://www.opengis.net/ogc"><PropertyIsEqualTo><PropertyName>STNAMEC</PropertyName><Literal>104国道</Literal></PropertyIsEqualTo></Filter>',
                 //filter:ol.format.filter.equalTo('OWNER', '360300'),  无效，用xml格式，并且有命名空间
-                callback: 'loadWfs'
+                callback: callbackName
             });
 
             var getText = function (feature, resolution) {
@@ -572,13 +569,13 @@
                                 color: "rgba(255, 255, 255, 1)" //getAreaColor("",0,100,colorValue ) //****.parkFillColor   rgba(255, 255, 255, 1)
                             }),
                             stroke: new ol.style.Stroke({
-                                color: roadColor(feature), //"rgba(0, 255, 255, 1)",//"#319FD3",//****.parkBorderColor,
+                                color: roadColor(feature), //"rgba(0, 255, 255, 1)",//"#319FD3",//****.parkBorderColor,  
                                 width: 3
                             }),
                             text: createTextStyle(feature, resolution)
                         });
                     }
-                    return [highlightStyleCache[text]];//[style];
+                    return [highlightStyleCache[text]];//[style];  
                 }
             };
 
@@ -786,7 +783,6 @@
                 for (var i = 0; i < roadFeature.length; i++) {
                     if (rId == roadFeature[i].get('FEATUREGUI')) {
                         var tempFeature = roadFeature[i];
-
                         selectedFeatures.clear();
                         selectedFeatures.push(tempFeature);
                         this._map.getView().fit(tempFeature.getGeometry());
