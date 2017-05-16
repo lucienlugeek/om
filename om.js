@@ -1,14 +1,14 @@
-// framework based on openlayers Version v4.0.1 by lucien
+// framework based on openlayers Version v4.0.1 by lucien with jQuery
 (function (root, factory) {
     if (typeof exports === "object") {
         module.exports = factory();
     } else if (typeof define === 'function' && define.amd) {
         define(['ol'], factory);
     } else {
-        root.OpenMap = factory();
+        root.OpenMap = factory(root.ol);
     }
 }(this, function (ol) {
-    var OpenMap = window.OpenMap = function () {
+    var OpenMap = this.OpenMap = function () {
         if (arguments.length) {
             this.init.apply(this, arguments);
         }
@@ -53,6 +53,87 @@
             center: [121.84059516385024, 29.902349218390047]//如不指定，则默认北仑区政府
         },
         /**
+         * 初始化图层组layer
+         */
+        globalGroupLayer: function (options) {
+            if (typeof options === 'undefined'
+                || typeof options.mapUrl === 'undefined'
+                || typeof options.layers === 'undefined') {
+                console.error('必须指定图层配置！');
+                return null;
+            }
+            return new ol.layer.Group({
+                layers: [
+                    new ol.layer.Image({
+                        source: new ol.source.ImageWMS({
+                            ratio: 1,
+                            url: options.mapUrl,
+                            params: {
+                                'FORMAT': options.format || 'image/png',
+                                'VERSION': options.version || '1.1.0',
+                                LAYERS: options.layers
+                            }
+                        })
+                    })
+                ]
+            });
+        },
+        /**
+         * 初始化Image layer
+         */
+        globalImageLayer: function (options) {
+            if (typeof options === 'undefined'
+                || typeof options.mapUrl === 'undefined'
+                || typeof options.layers === 'undefined') {
+                console.error('必须指定图层配置！');
+                return null;
+            }
+            return new ol.layer.Image({
+                source: new ol.source.ImageWMS({
+                    ratio: 1,
+                    url: options.mapUrl,
+                    params: {
+                        'FORMAT': options.format || 'image/png',
+                        'VERSION': options.version || '1.1.0',
+                        LAYERS: options.layers
+                    }
+                })
+            });
+        },
+        /**
+         * 初始化瓦片Layer
+         */
+        globalTileLayer: function (options) {
+            if (typeof options === 'undefined'
+                || typeof options.mapUrl === 'undefined'
+                || typeof options.layers === 'undefined'
+                || typeof options.srs === 'undefined'
+                || typeof options.resolutions === 'undefined'
+                || typeof options.origin === 'undefined') {
+                console.error('必须指定图层配置！');
+                return null;
+            }
+            return new ol.layer.Tile({
+                source:
+                new ol.source.TileWMS({
+                    url: options.mapUrl,
+                    params: {
+                        'FORMAT': options.format || 'image/png',
+                        'VERSION': options.version || '1.1.0',
+                        'LAYERS': options.layers,  // 'beiluncacheKJ',
+                        'SRS': options.srs //'EPSG:4490'
+                    },
+                    tileGrid: ol.tilegrid.TileGrid({
+                        minZoom: options.minZoom || 0,
+                        maxZoom: options.maxZoom || 9,
+                        resolutions: options.resolutions, //[0.00068664552062088911, 0.00034332276031044456, 0.00017166138015522228]
+                        origin: options.origin //[-180.0, 90.0]
+                    })
+                })
+                //extent: bounds  //根据需要有范围限制添加extent，没有就 不添加
+            });
+        },
+        /**
          * @desc 根据指定参数，初始化地图到容器中
          */
         init: function (id, options) {
@@ -66,50 +147,6 @@
                 $.extend(self.initParam, options); //地图初始化参数
             }
             var initParam = self.initParam;
-            var bounds = [121.64747112300006, 29.702835634000053,
-                122.1792500360001, 30.002109405000056];
-            //地图底图
-            var baseMapKJ = new ol.layer.Tile({
-                source:
-                new ol.source.TileWMS({
-                    url: 'http://192.168.3.233:8180/geowebcache/service/wms',
-                    params: {
-                        'FORMAT': 'image/png',
-                        'VERSION': '1.1.1',
-                        'LAYERS': 'beiluncacheKJ',
-                        'SRS': 'EPSG:4490'
-                    },
-                    tileGrid: ol.tilegrid.TileGrid({
-                        minZoom: 0,
-                        maxZoom: 9,
-                        resolutions: [0.00068664552062088911, 0.00034332276031044456, 0.00017166138015522228, 8.5830690077611139e-005, 4.291534503880557e-005, 2.1457672519402785e-005,
-                            1.0728836259701392e-005, 5.3644181298506962e-006, 2.6822090649253481e-006, 1.3411045324626741e-006],
-                        origin: [-180.0, 90.0]
-                    })
-                }),
-                extent: bounds
-            });
-            //地图标注
-            var baseMapBZ = new ol.layer.Tile({
-                source:
-                new ol.source.TileWMS({
-                    url: 'http://192.168.3.233:8180/geowebcache/service/wms',
-                    params: {
-                        'FORMAT': 'image/png',
-                        'VERSION': '1.1.1',
-                        'LAYERS': 'beiluncacheBZ',
-                        'SRS': 'EPSG:4490'
-                    },
-                    tileGrid: ol.tilegrid.TileGrid({
-                        minZoom: 0,
-                        maxZoom: 9,
-                        resolutions: [0.00068664552062088911, 0.00034332276031044456, 0.00017166138015522228, 8.5830690077611139e-005, 4.291534503880557e-005, 2.1457672519402785e-005,
-                            1.0728836259701392e-005, 5.3644181298506962e-006, 2.6822090649253481e-006, 1.3411045324626741e-006],
-                        origin: [-180.0, 90.0]
-                    })
-                }),
-                extent: bounds
-            });
             self._map = new ol.Map({
                 controls: ol.control.defaults({
                     attribution: false
@@ -124,8 +161,8 @@
                     projection: initParam.projection,
                     extent: initParam.extent || undefined
                 }),
-                layers: [baseMapKJ, baseMapBZ],
-                extent: bounds
+                layers: initParam.layers || [],
+                extent: initParam.bounds || [121.64747112300006, 29.702835634000053,122.1792500360001, 30.002109405000056]
             });
             //保存所有的layer
             self._layer = {};
@@ -142,6 +179,12 @@
          */
         getMap: function () {
             return this._map;
+        },
+        getProjection:function(){
+        	return this._map.getView().getProjection();
+        },        
+        getProjectionCode:function(){
+        	return this.getProjection().getCode();
         },
         /**
          * @desc 添加层
@@ -213,7 +256,9 @@
             });
             fea.setId(option.id);
             _layer.getSource().addFeatures([fea]);
-            OpenMap.is(option.visible, 'Undefined') ? null : _layer.setVisible(option.visible);
+            if (option.visible !== undefined) {
+                _layer.setVisible(option.visible);
+            }
             return fea;
         },
         /**
@@ -534,8 +579,8 @@
                 typename: typeName,//'poi:POI_POINT',
                 propertyname: propertyName, //'ID,NAMEC,GEOMETRY',
                 maxfeatures: 20000,
-                srid: 'EPSG:4326·',
-                filter:'<Filter xmlns="http://www.opengis.net/ogc"><PropertyIsEqualTo><PropertyName>STNAMEC</PropertyName><Literal>104国道</Literal></PropertyIsEqualTo></Filter>',
+                srid: 'EPSG:4326',
+                filter: '<Filter xmlns="http://www.opengis.net/ogc"><Or><PropertyIsEqualTo><PropertyName>FEATUREGUI</PropertyName><Literal>f637a67225f942698aa8496860501951</Literal></PropertyIsEqualTo><PropertyIsEqualTo><PropertyName>FEATUREGUI</PropertyName><Literal>266fef76223946dc8f9ec66369780e9d</Literal></PropertyIsEqualTo></Or></Filter>',
                 //filter:ol.format.filter.equalTo('OWNER', '360300'),  无效，用xml格式，并且有命名空间
                 callback: callbackName
             });
