@@ -534,8 +534,8 @@
                 typename: typeName,//'poi:POI_POINT',
                 propertyname: propertyName, //'ID,NAMEC,GEOMETRY',
                 maxfeatures: 20000,
-                srid: 'EPSG:4326',
-                // filter:'<Filter xmlns="http://www.opengis.net/ogc"><PropertyIsEqualTo><PropertyName>STNAMEC</PropertyName><Literal>104国道</Literal></PropertyIsEqualTo></Filter>',
+                srid: 'EPSG:4326·',
+                filter:'<Filter xmlns="http://www.opengis.net/ogc"><PropertyIsEqualTo><PropertyName>STNAMEC</PropertyName><Literal>104国道</Literal></PropertyIsEqualTo></Filter>',
                 //filter:ol.format.filter.equalTo('OWNER', '360300'),  无效，用xml格式，并且有命名空间
                 callback: callbackName
             });
