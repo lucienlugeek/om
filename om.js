@@ -160,6 +160,27 @@
             });
         },
         /**
+         * 初始化vector layer
+         */
+        globalVectorLayer: function (options) {
+            if (typeof options === 'undefined'
+                || typeof options.type === 'undefined') {
+                console.error('必须指定图层配置！');
+                return null;
+            }
+            return new ol.layer.Vector({
+                source: new ol.source.Vector(),
+                style: options.style || function (feature) {
+                    //type: Point(点), LineString(线),Circle(圆) ,Polygon(多边形)
+                    if (options.type == 'Point') {
+                        return getPointStyle();
+                    } else {
+                        return getPolyStyle();
+                    }
+                }
+            });
+        },
+        /**
          * @desc 根据指定参数，初始化地图到容器中
          */
         init: function (id, options) {
@@ -219,6 +240,56 @@
             return this.getProjection().getCode();
         },
         /**
+         * @desc 设置点默认样式
+         */
+        getPointStyle: function () {
+            return new ol.style.Style({
+                image: new ol.style.Circle({
+                    radius: 5,
+                    fill: new ol.style.Fill({
+                        color: 'rgba(255, 255, 255, 0.6)'
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: 'rgba(0, 255, 255, 0.6)'
+                    }),
+                    image: new ol.style.Circle({
+                        radius: 4,
+                        fill: new ol.style.Fill({
+                            color: '#FF0000'
+                        })
+                    })
+                })
+            });
+        },
+        /**
+         * @desc 设置点图标默认样式
+         */
+        getIconStyle: function () {
+            return new ol.style.Style({
+                image: new ol.style.Icon(({
+                    anchor: [0.5, 1],
+                    //anchorXUnits: 'fraction',
+                    //anchorYUnits: 'pixels',
+                    //imgSize:[50,50],
+                    rotation: 0,
+                    src: 'images/marker.png'
+                }))
+            });
+        },
+        /**
+         * @desc 设置线面默认样式
+         */
+        getPolyStyle: function () {
+            return new ol.style.Style({
+                fill: new ol.style.Fill({
+                    color: 'rgba(255, 255, 255, 0.6)'
+                }),
+                stroke: new ol.style.Stroke({
+                    color: 'rgba(0, 255, 255, 0.6)'
+                })
+            });
+        },
+        /**
          * @desc 添加层
          */
         addLayer: function (layerName, layerObj) {
@@ -271,7 +342,7 @@
                         });
                     }
                 });
-                self.addLayer(option.layer,_layer);
+                self.addLayer(option.layer, _layer);
                 self.addLayerListener(_layer);
             }
             var fea = new ol.Feature({
@@ -289,6 +360,41 @@
                 _layer.setVisible(option.visible);
             }
             return fea;
+        },
+        /**
+         * @desc 向地图添加多个marker标记
+         * @returns {*} 返回构建的marker对象
+         */
+        addMarkers: function (options) {
+            if (typeof options === 'undefined'
+                || typeof options.data === 'undefined'
+                || typeof options.layerName === 'undefined') {
+                console.error('必须指定marker的图层名称！');
+                return;
+            }
+            var self = this;
+            var _layer = this._layer[options.layerName] = new ol.layer.Vector({ //存放标注点的layer
+                source: new ol.source.Vector(),
+                style: function (feature) {
+                    return new ol.style.Style({
+                        image: new ol.style.Icon({
+                            // rotation: fea.get('rotation') || 0,
+                            src: feature.get('image'),
+                            anchor: [10, 10]
+                        })
+                    });
+                }
+            });
+
+            var features = [];
+            if (options.data) {
+                $.each(options.data, function (index, tempData) {
+                    var coordinates = [parseFloat(tempData['lon']), parseFloat(tempData['lat'])];
+                    features[index] = new ol.Feature({ geometry: new ol.geom.Point(coordinates), image: tempData['image'] });
+                });
+            }
+            _layer.getSource().addFeatures(features);
+            this._map.addLayer(_layer);
         },
         /**
          * @desc 根据id获取marker
