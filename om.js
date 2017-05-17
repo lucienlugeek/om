@@ -158,6 +158,61 @@
                 blur: options && options.blur || 30,
                 radius: options && options.radius || 30
             });
+        },        
+        /**
+         * 初始化聚合图：heatmap layer
+         */
+        globalClusterLayer: function (options) {
+            /*if (typeof options === 'undefined'
+                  || typeof options.type === 'undefined') {
+                  console.error('必须指定图层配置！');
+                  return null;
+              }*/
+        	var self = this;
+            var features = [];
+            if (options && options.data) {
+                $.each(options.data, function (index, tempData) {
+                    var coordinates = [parseFloat(tempData['lon']), parseFloat(tempData['lat'])];
+                    features[index] = new ol.Feature(new ol.geom.Point(coordinates));
+                });
+            }
+            return new ol.layer.Vector({
+                source: new ol.source.Cluster({
+                    distance: options && options.distance || 40, //pix
+                    source: new ol.source.Vector({
+                    features: features
+                    })
+                  }),
+                projection:self.getProjection(),
+                style: function(feature) {
+                  var feas = feature.get('features'), i = 0;
+                  var size = feas.length;                
+                  var rO, rI;
+                  if (size >= 100) {
+                      rO = 44;
+                      rI = 33;
+                  } else if (size >= 10 && size <= 99) {
+                      rO = 32;
+                      rI = 24;
+                  } else {
+                      rO = 28;
+                      rI = 18;
+                  }
+                  style = new ol.style.Style({
+                      image: new ol.style.Icon({
+                          img: dcanvasCircle($('canvas.process').clone().show().get(0), {
+                              'centerX': '45',
+                              'centerY': '45',
+                              'radiusOutside': rO,
+                              'radiusInside': rI,
+                              'size': size
+                          }),
+                          imgSize: [90, 90]
+                      }),
+                  });
+                  return style;
+                }
+              });
         },
         /**
          * 初始化vector layer
@@ -368,12 +423,13 @@
             var self = this;            
             var _layer= this._layer[options.layerName] = new ol.layer.Vector({ //存放标注点的layer
                 source: new ol.source.Vector(),
+                projection:self.getProjection(),
                 style: function (feature) {
                     return new ol.style.Style({
                         image: new ol.style.Icon({
                            // rotation: fea.get('rotation') || 0,
-                            src: feature.get('image'),
-                            anchor: [10,10]
+                            src: feature.get('image')//,
+                            //anchor: [10,10]
                         })
                     });
                 }
@@ -433,7 +489,8 @@
                 });
             }
             var source = new ol.source.Vector({
-                features: features
+                features: features,
+                projection:self.getProjection()
             });
             var clusterSource = new ol.source.Cluster({
                 distance: 100,
@@ -1020,5 +1077,61 @@ function dcanvas(ele, data) {
     context.textBaseline = 'middle';
     context.moveTo(x, y);
     context.fillText(data.normalSize + '/' + data.size, x, y);
+    return canvas;
+}
+
+/**
+ * 为聚合图层画canvas图
+ * @param {*} ele
+ * @param {*} data
+ */
+function dcanvasCircle(ele, data) {
+	// 一个canvas标签
+    var canvas = ele;
+    var x = data.centerX;
+    var y = data.centerY;
+    var rO = data.radiusOutside;
+    var rI = data.radiusInside;
+    var lineWidth = 8;
+    // 拿到绘图上下文,目前只支持"2d"
+    var context = canvas.getContext('2d');
+    // 将绘图区域清空,如果是第一次在这个画布上画图,画布上没有东西,这步就不需要了
+    context.clearRect(0, 0, 2 * rO, 2 * rO);
+
+    //画最大的半透明的圆
+    context.beginPath();
+    context.moveTo(x, y);//坐标移动到圆心
+    context.arc(x, y, rO, 0, Math.PI * 2, false);
+    context.closePath();
+    context.fillStyle = 'rgba(255,169,76,0.4)';// 填充颜色
+    context.fill();
+
+    //画白色轮廓
+    context.moveTo(x + rI, y);
+    context.beginPath();
+    context.lineWidth = lineWidth;
+    context.strokeStyle = '#fff';
+    context.arc(x, y, rI, 0, 2 * Math.PI);
+    context.closePath();
+    context.stroke();
+
+    if (data.normalSize) {
+        //画橙色进度条的轮廓
+        context.moveTo(x, y);
+        context.beginPath();
+        context.lineWidth = lineWidth;
+        context.lineCap = 'round';
+        context.strokeStyle = "#ffa94c";
+        context.arc(x, y, rI, -Math.PI / 2, Math.PI * 2 - Math.PI / 2);
+        context.stroke();
+    }
+
+    //在中间写字
+    context.font = "9pt Arial";
+    context.fillStyle = '#000';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.moveTo(x, y);
+    context.fillText(data.size, x, y);
     return canvas;
 }
