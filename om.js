@@ -256,7 +256,7 @@
             var self = this;
             var _layer = self.getLayer(option.layer);
             if (!_layer) {//如果没有指定层，则创建
-                _layer = this._layer[layerName] = new ol.layer.Vector({ //存放标注点的layer
+                _layer = new ol.layer.Vector({ //存放标注点的layer
                     source: new ol.source.Vector({
                         features: [],
                         overlaps: false//是否允许重叠
@@ -271,8 +271,9 @@
                         });
                     }
                 });
+                self.addLayer(option.layer,_layer);
+                self.addLayerListener(_layer);
             }
-            this.addLayerListener(_layer);
             var fea = new ol.Feature({
                 geometry: new ol.geom.Point(option.position),
                 anchor: option.anchor,
