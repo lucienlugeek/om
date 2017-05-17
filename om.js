@@ -1,4 +1,5 @@
-// framework based on openlayers Version v4.0.1 by lucien with jQuery
+// framework based on openlayers Version v4.0.1 with jQuery
+//  by lucien and zouh
 (function (root, factory) {
     if (typeof exports === "object") {
         module.exports = factory();
