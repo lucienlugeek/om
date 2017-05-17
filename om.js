@@ -467,8 +467,8 @@
                 style: function (fea) {//点击marker时不发生样式的变化，还是使用本身的image作为src
                     return new ol.style.Style({
                         image: new ol.style.Icon({
-                            anchor: [0.5, 0.5],
-                            // offset: option.offset || [0, 0],
+                            anchor: fea.get('anchor'),
+                            rotation: fea.get('rotation'),
                             src: fea.get('image')
                         })
                     });
