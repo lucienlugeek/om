@@ -134,6 +134,32 @@
             });
         },
         /**
+         * 初始化热力图：heatmap layer
+         */
+        globalHeatmapLayer: function (options) {
+            /*if (typeof options === 'undefined'
+                  || typeof options.type === 'undefined') {
+                  console.error('必须指定图层配置！');
+                  return null;
+              }*/
+            var features = [];
+            if (options && options.data) {
+                $.each(options.data, function (index, tempData) {
+                    var coordinates = [parseFloat(tempData['lon']), parseFloat(tempData['lat'])];
+                    features[index] = new ol.Feature(new ol.geom.Point(coordinates));
+                });
+            }
+            return new ol.layer.Heatmap({
+                source: new ol.source.Cluster({
+                    source: new ol.source.Vector({
+                        features: features
+                    })
+                }),
+                blur: options && options.blur || 30,
+                radius: options && options.radius || 30
+            });
+        },
+        /**
          * @desc 根据指定参数，初始化地图到容器中
          */
         init: function (id, options) {
@@ -162,7 +188,7 @@
                     extent: initParam.extent || undefined
                 }),
                 layers: initParam.layers || [],
-                extent: initParam.bounds || [121.64747112300006, 29.702835634000053,122.1792500360001, 30.002109405000056]
+                extent: initParam.bounds || [121.64747112300006, 29.702835634000053, 122.1792500360001, 30.002109405000056]
             });
             //保存所有的layer
             self._layer = {};
@@ -180,39 +206,27 @@
         getMap: function () {
             return this._map;
         },
-        getProjection:function(){
-        	return this._map.getView().getProjection();
-        },        
-        getProjectionCode:function(){
-        	return this.getProjection().getCode();
+        /**
+         * @desc 获取投影
+         */
+        getProjection: function () {
+            return this._map.getView().getProjection();
+        },
+        /**
+         * @desc 获取投影编码
+         */
+        getProjectionCode: function () {
+            return this.getProjection().getCode();
         },
         /**
          * @desc 添加层
          */
         addLayer: function (layerName, layerObj) {
-            if (this.getLayer(layerName)) {
-                return;
-            }
-            var _layer = this._layer[layerName] = layerObj;
-            if (!_layer) {//如果没有指定层，则创建默认值 (marker)
-                _layer = this._layer[layerName] = new ol.layer.Vector({ //存放标注点的layer
-                    source: new ol.source.Vector({
-                        features: [],
-                        overlaps: false//是否允许重叠
-                    }),
-                    style: function (fea) {
-                        return new ol.style.Style({
-                            image: new ol.style.Icon({
-                                rotation: fea.get('rotation') || 0,
-                                src: fea.get('image'),
-                                anchor: fea.get('anchor')
-                            })
-                        });
-                    }
-                });
-            }
-            this._map.addLayer(_layer);
-            return _layer;
+            if (arguments.length !== 2) return;
+            if (this.getLayer(layerName)) return;
+            this._layer[layerName] = layerObj;
+            this._map.addLayer(layerObj);
+            return layerObj;
         },
         /**
          * @desc 获取层
@@ -241,8 +255,22 @@
             }
             var self = this;
             var _layer = self.getLayer(option.layer);
-            if (!_layer) {
-                _layer = self.addLayer(option.layer);
+            if (!_layer) {//如果没有指定层，则创建
+                _layer = this._layer[layerName] = new ol.layer.Vector({ //存放标注点的layer
+                    source: new ol.source.Vector({
+                        features: [],
+                        overlaps: false//是否允许重叠
+                    }),
+                    style: function (fea) {
+                        return new ol.style.Style({
+                            image: new ol.style.Icon({
+                                rotation: fea.get('rotation') || 0,
+                                src: fea.get('image'),
+                                anchor: fea.get('anchor')
+                            })
+                        });
+                    }
+                });
             }
             this.addLayerListener(_layer);
             var fea = new ol.Feature({
