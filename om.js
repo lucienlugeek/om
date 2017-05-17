@@ -217,23 +217,23 @@
         /**
          * 初始化vector layer
          */
-        globalVectorLayer:function(options){
-    	if (typeof options === 'undefined'
-            || typeof options.type === 'undefined') {
-            console.error('必须指定图层配置！');
-            return null;
-        }
-        return	new ol.layer.Vector({
-     		source: new ol.source.Vector(),
-     		style: options.style || function(feature){
-     			//type: Point(点), LineString(线),Circle(圆) ,Polygon(多边形)
-     			if(options.type =='Point'){
-     				return getPointStyle();
-     			}else{
-     				return getPolyStyle();
-     			}
-     		}
-       	});
+        globalVectorLayer: function (options) {
+            if (typeof options === 'undefined'
+                || typeof options.type === 'undefined') {
+                console.error('必须指定图层配置！');
+                return null;
+            }
+            return new ol.layer.Vector({
+                source: new ol.source.Vector(),
+                style: options.style || function (feature) {
+                    //type: Point(点), LineString(线),Circle(圆) ,Polygon(多边形)
+                    if (options.type == 'Point') {
+                        return getPointStyle();
+                    } else {
+                        return getPolyStyle();
+                    }
+                }
+            });
         },
         /**
          * @desc 根据指定参数，初始化地图到容器中
@@ -282,61 +282,67 @@
         getMap: function () {
             return this._map;
         },
-        getProjection:function(){
-        	return this._map.getView().getProjection();
-        },        
-        getProjectionCode:function(){
-        	return this.getProjection().getCode();
+        /**
+         * @desc 获取投影
+         */
+        getProjection: function () {
+            return this._map.getView().getProjection();
         },
         /**
-         * 设置点默认样式
+         * @desc 获取投影编码
          */
-        getPointStyle:function(){
-        	return new ol.style.Style({
-        	    image:new ol.style.Circle({
-        	        radius:5,
-        	    	fill:new ol.style.Fill({
-        	          color:'rgba(255, 255, 255, 0.6)'
-        	        }),
-        	        stroke:new ol.style.Stroke({
-        	          color:'rgba(0, 255, 255, 0.6)'
-        	        }),
-        	        image: new ol.style.Circle({
-        	              radius: 4,
-        	              fill: new ol.style.Fill({
-        	                  color: '#FF0000'
-        	              })
-        	          })
-        	      })
-        	    });
+        getProjectionCode: function () {
+            return this.getProjection().getCode();
         },
         /**
-         * 设置点图标默认样式
+         * @desc 设置点默认样式
          */
-        getIconStyle:function(){
-        	return new ol.style.Style({
-        		image: new ol.style.Icon(({  
-                    anchor: [0.5, 1],  
-                    //anchorXUnits: 'fraction',  
-                    //anchorYUnits: 'pixels', 
-                    //imgSize:[50,50],                    
-                    rotation:0,
-                    src: 'images/marker.png'  
-                  }))
-        	    });
+        getPointStyle: function () {
+            return new ol.style.Style({
+                image: new ol.style.Circle({
+                    radius: 5,
+                    fill: new ol.style.Fill({
+                        color: 'rgba(255, 255, 255, 0.6)'
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: 'rgba(0, 255, 255, 0.6)'
+                    }),
+                    image: new ol.style.Circle({
+                        radius: 4,
+                        fill: new ol.style.Fill({
+                            color: '#FF0000'
+                        })
+                    })
+                })
+            });
         },
         /**
-         * 设置线面默认样式
+         * @desc 设置点图标默认样式
          */
-        getPolyStyle:function(){
-        	return new ol.style.Style({
-        		fill:new ol.style.Fill({
-        		      color:'rgba(255, 255, 255, 0.6)'
-        		    }),
-        		    stroke:new ol.style.Stroke({
-        		      color:'rgba(0, 255, 255, 0.6)'
-        		    }) 
-        	    });
+        getIconStyle: function () {
+            return new ol.style.Style({
+                image: new ol.style.Icon(({
+                    anchor: [0.5, 1],
+                    //anchorXUnits: 'fraction',
+                    //anchorYUnits: 'pixels',
+                    //imgSize:[50,50],
+                    rotation: 0,
+                    src: 'images/marker.png'
+                }))
+            });
+        },
+        /**
+         * @desc 设置线面默认样式
+         */
+        getPolyStyle: function () {
+            return new ol.style.Style({
+                fill: new ol.style.Fill({
+                    color: 'rgba(255, 255, 255, 0.6)'
+                }),
+                stroke: new ol.style.Stroke({
+                    color: 'rgba(0, 255, 255, 0.6)'
+                })
+            });
         },
         /**
          * @desc 添加层
@@ -376,7 +382,7 @@
             var self = this;
             var _layer = self.getLayer(option.layer);
             if (!_layer) {//如果没有指定层，则创建
-                _layer = this._layer[layerName] = new ol.layer.Vector({ //存放标注点的layer
+                _layer = new ol.layer.Vector({ //存放标注点的layer
                     source: new ol.source.Vector({
                         features: [],
                         overlaps: false//是否允许重叠
@@ -391,8 +397,9 @@
                         });
                     }
                 });
+                self.addLayer(option.layer, _layer);
+                self.addLayerListener(_layer);
             }
-            this.addLayerListener(_layer);
             var fea = new ol.Feature({
                 geometry: new ol.geom.Point(option.position),
                 anchor: option.anchor,
@@ -420,8 +427,8 @@
                 console.error('必须指定marker的图层名称！');
                 return;
             }
-            var self = this;            
-            var _layer= this._layer[options.layerName] = new ol.layer.Vector({ //存放标注点的layer
+            var self = this;
+            var _layer = this._layer[options.layerName] = new ol.layer.Vector({ //存放标注点的layer
                 source: new ol.source.Vector(),
                 projection:self.getProjection(),
                 style: function (feature) {
@@ -434,14 +441,14 @@
                     });
                 }
             });
-            
+
             var features = [];
             if (options.data) {
                 $.each(options.data, function (index, tempData) {
                     var coordinates = [parseFloat(tempData['lon']), parseFloat(tempData['lat'])];
-                    features[index] = new ol.Feature({geometry:new ol.geom.Point(coordinates),image:tempData['image']});
+                    features[index] = new ol.Feature({ geometry: new ol.geom.Point(coordinates), image: tempData['image'] });
                 });
-            }           
+            }
             _layer.getSource().addFeatures(features);
             this._map.addLayer(_layer);
         },
