@@ -1,4 +1,5 @@
-// framework based on openlayers Version v4.0.1 by lucien with jQuery
+// framework based on openlayers Version v4.0.1 with jQuery
+//  by lucien and zouh
 (function (root, factory) {
     if (typeof exports === "object") {
         module.exports = factory();
@@ -347,11 +348,18 @@
         /**
          * @desc 添加层
          */
-        addLayer: function (layerName, layerObj) {
-            if (arguments.length !== 2) return;
-            if (this.getLayer(layerName)) return;
-            this._layer[layerName] = layerObj;
-            this._map.addLayer(layerObj);
+        addLayer: function (layerName, layerObj, force) {
+            if (force) {
+                if (arguments.length !== 3) return;
+                this._layer[layerName] = layerObj;
+                this._map.removeLayer(layerName);
+                this._map.addLayer(layerObj);
+            } else {
+                if (arguments.length !== 2) return;
+                if (this.getLayer(layerName)) return;
+                this._layer[layerName] = layerObj;
+                this._map.addLayer(layerObj);
+            }
             return layerObj;
         },
         /**
@@ -656,17 +664,21 @@
          *        events : drawstart,drawend,change,propertychange
          */
         openDraw: function (type, events) {
-            if (type === 'undefined' || ['Point', 'LineString', 'Box', 'Polygon', 'Circle'].indexOf(type) === -1) {
+            if (type === undefined || ['Point', 'LineString', 'Box', 'Polygon', 'Circle'].indexOf(type) === -1) {
                 console.error('draw type is error!');
                 return;
             }
             var self = this;
             var map = self.getMap();
-            var source = new ol.source.Vector({ wrapX: false });
+            var features = new ol.Collection();
+            var source = new ol.source.Vector({
+                features: features,
+                wrapX: false
+            });
             var _drawLayer = new ol.layer.Vector({
                 source: source
             });
-            self.addLayer('_drawLayer', _drawLayer);
+            self.addLayer('_drawLayer', _drawLayer,true);
             // self._featureOverlay = new ol.layer.Vector({ //画图所用的layer对象
             //     source: new ol.source.Vector({
             //         features: features
@@ -701,19 +713,20 @@
                 type: /** @type {ol.geom.GeometryType} */ (type === "Box" ? "Circle" : type),
                 geometryFunction: type === "Box" ? ol.interaction.Draw.createBox() : undefined
             });
-
-            map.addInteraction(self._draw);
-            if (events && !OpenMap.is(events, 'Object')) {
-                console.warn('事件参数错误！');
-                return;
-            } else {
-                for (var e in events) {
-                    if (events.hasOwnProperty(e)) {
-                        self._draw.dispatchEvent(e);
-                        self._draw.on(e, events[e]);
+            if (events) {
+                if (!OpenMap.is(events, 'Object')) {
+                    console.warn('事件参数错误！');
+                    return;
+                } else {
+                    for (var e in events) {
+                        if (events.hasOwnProperty(e)) {
+                            self._draw.dispatchEvent(e);
+                            self._draw.on(e, events[e]);
+                        }
                     }
                 }
             }
+            map.addInteraction(self._draw);
         },
         /**
          * @desc 返回绘画对象
@@ -727,7 +740,6 @@
         closeDraw: function () {
             if (this._draw) {
                 this._map.removeInteraction(this._draw);
-                this._draw = null;
             }
         },
         /**
