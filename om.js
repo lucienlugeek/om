@@ -1,4 +1,4 @@
-// framework based on openlayers Version v4.0.1 with jQuery
+﻿// framework based on openlayers Version v4.0.1 with jQuery
 //  by lucien and zouh
 (function (root, factory) {
     if (typeof exports === "object") {
@@ -735,7 +735,7 @@
         * 路况图层
         *'beilun:TRANETROAD','FEATUREGUI,FCODE,FNAME,FSCALE,DISPLAY,GEOMETRY'
         */
-        adminLayerVisibility: function (typeName, propertyName, callbackName) {
+        adminLayerVisibility: function (typeName, propertyName, callbackName,filter) {
             var self = this;
             //wfs回调方法
             window[callbackName] = function (res) {
@@ -773,7 +773,7 @@
                 propertyname: propertyName, //'ID,NAMEC,GEOMETRY',
                 maxfeatures: 20000,
                 srid: 'EPSG:4326',
-                filter: '<Filter xmlns="http://www.opengis.net/ogc"><Or><PropertyIsEqualTo><PropertyName>FEATUREGUI</PropertyName><Literal>f637a67225f942698aa8496860501951</Literal></PropertyIsEqualTo><PropertyIsEqualTo><PropertyName>FEATUREGUI</PropertyName><Literal>266fef76223946dc8f9ec66369780e9d</Literal></PropertyIsEqualTo></Or></Filter>',
+                filter: filter,
                 //filter:ol.format.filter.equalTo('OWNER', '360300'),  无效，用xml格式，并且有命名空间
                 callback: callbackName
             });
@@ -1014,20 +1014,40 @@
             return adminLayerSelect;
         },
         //选中某道路
-        locateRoad: function (rId, adminLayerSelect) {
+        locateRoad: function (adminLayerSelect) {
             var selectedFeatures = adminLayerSelect.getFeatures();
             var roadFeature = this.roadFeatures;
             if (roadFeature) {
+            	selectedFeatures.clear();
+		var extent = [180,90,0,0];
+		
                 for (var i = 0; i < roadFeature.length; i++) {
-                    if (rId == roadFeature[i].get('FEATUREGUI')) {
-                        var tempFeature = roadFeature[i];
-                        selectedFeatures.clear();
-                        selectedFeatures.push(tempFeature);
-                        this._map.getView().fit(tempFeature.getGeometry());
-                        break;
-                    }
+                    selectedFeatures.push(roadFeature[i]);
+		    if(extent[0] > roadFeature[i].getGeometry().getExtent()[0]){
+			extent[0]  = roadFeature[i].getGeometry().getExtent()[0];
+		    }
+		    if(extent[1] > roadFeature[i].getGeometry().getExtent()[1]){
+			extent[1]  = roadFeature[i].getGeometry().getExtent()[1];
+		    }
+		    if(extent[2] < roadFeature[i].getGeometry().getExtent()[2]){
+			extent[2]  = roadFeature[i].getGeometry().getExtent()[2];
+		    }
+		     if(extent[3] < roadFeature[i].getGeometry().getExtent()[3]){
+			extent[3]  = roadFeature[i].getGeometry().getExtent()[3];
+		    }
                 }
+                this._map.getView().fit(extent);
             }
+        },
+        //构建路段查询xml
+        buildFilterBySigmentIds:function(sigmentIds){
+        	var xml =  '<Filter xmlns="http://www.opengis.net/ogc"><Or>';
+        	for(var i=0;i<sigmentIds.length;i++)
+        	{
+        		xml +='<PropertyIsEqualTo><PropertyName>FEATUREGUI</PropertyName><Literal>'+sigmentIds[i]+'</Literal></PropertyIsEqualTo>';
+        	}
+        	xml +='</Or></Filter>';
+        	return xml;
         }
     };
     return OpenMap;
