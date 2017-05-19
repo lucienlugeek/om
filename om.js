@@ -159,7 +159,7 @@
                 blur: options && options.blur || 30,
                 radius: options && options.radius || 30
             });
-        },        
+        },
         /**
          * 初始化聚合图：heatmap layer
          */
@@ -169,7 +169,7 @@
                   console.error('必须指定图层配置！');
                   return null;
               }*/
-        	var self = this;
+            var self = this;
             var features = [];
             if (options && options.data) {
                 $.each(options.data, function (index, tempData) {
@@ -181,39 +181,39 @@
                 source: new ol.source.Cluster({
                     distance: options && options.distance || 40, //pix
                     source: new ol.source.Vector({
-                    features: features
+                        features: features
                     })
-                  }),
-                projection:self.getProjection(),
-                style: function(feature) {
-                  var feas = feature.get('features'), i = 0;
-                  var size = feas.length;                
-                  var rO, rI;
-                  if (size >= 100) {
-                      rO = 44;
-                      rI = 33;
-                  } else if (size >= 10 && size <= 99) {
-                      rO = 32;
-                      rI = 24;
-                  } else {
-                      rO = 28;
-                      rI = 18;
-                  }
-                  style = new ol.style.Style({
-                      image: new ol.style.Icon({
-                          img: dcanvasCircle($('canvas.process').clone().show().get(0), {
-                              'centerX': '45',
-                              'centerY': '45',
-                              'radiusOutside': rO,
-                              'radiusInside': rI,
-                              'size': size
-                          }),
-                          imgSize: [90, 90]
-                      }),
-                  });
-                  return style;
+                }),
+                projection: self.getProjection(),
+                style: function (feature) {
+                    var feas = feature.get('features'), i = 0;
+                    var size = feas.length;
+                    var rO, rI;
+                    if (size >= 100) {
+                        rO = 44;
+                        rI = 33;
+                    } else if (size >= 10 && size <= 99) {
+                        rO = 32;
+                        rI = 24;
+                    } else {
+                        rO = 28;
+                        rI = 18;
+                    }
+                    style = new ol.style.Style({
+                        image: new ol.style.Icon({
+                            img: dcanvasCircle($('canvas.process').clone().show().get(0), {
+                                'centerX': '45',
+                                'centerY': '45',
+                                'radiusOutside': rO,
+                                'radiusInside': rI,
+                                'size': size
+                            }),
+                            imgSize: [90, 90]
+                        }),
+                    });
+                    return style;
                 }
-              });
+            });
         },
         /**
          * 初始化vector layer
@@ -348,18 +348,11 @@
         /**
          * @desc 添加层
          */
-        addLayer: function (layerName, layerObj, force) {
-            if (force) {
-                if (arguments.length !== 3) return;
-                this._layer[layerName] = layerObj;
-                this._map.removeLayer(layerName);
-                this._map.addLayer(layerObj);
-            } else {
-                if (arguments.length !== 2) return;
-                if (this.getLayer(layerName)) return;
-                this._layer[layerName] = layerObj;
-                this._map.addLayer(layerObj);
-            }
+        addLayer: function (layerName, layerObj) {
+            if (arguments.length !== 2) return;
+            if (this.getLayer(layerName)) return;
+            this._layer[layerName] = layerObj;
+            this._map.addLayer(layerObj);
             return layerObj;
         },
         /**
@@ -438,11 +431,11 @@
             var self = this;
             var _layer = this._layer[options.layerName] = new ol.layer.Vector({ //存放标注点的layer
                 source: new ol.source.Vector(),
-                projection:self.getProjection(),
+                projection: self.getProjection(),
                 style: function (feature) {
                     return new ol.style.Style({
                         image: new ol.style.Icon({
-                           // rotation: fea.get('rotation') || 0,
+                            // rotation: fea.get('rotation') || 0,
                             src: feature.get('image')//,
                             //anchor: [10,10]
                         })
@@ -505,7 +498,7 @@
             }
             var source = new ol.source.Vector({
                 features: features,
-                projection:self.getProjection()
+                projection: self.getProjection()
             });
             var clusterSource = new ol.source.Cluster({
                 distance: 100,
@@ -664,21 +657,17 @@
          *        events : drawstart,drawend,change,propertychange
          */
         openDraw: function (type, events) {
-            if (type === undefined || ['Point', 'LineString', 'Box', 'Polygon', 'Circle'].indexOf(type) === -1) {
+            if (type === 'undefined' || ['Point', 'LineString', 'Box', 'Polygon', 'Circle'].indexOf(type) === -1) {
                 console.error('draw type is error!');
                 return;
             }
             var self = this;
             var map = self.getMap();
-            var features = new ol.Collection();
-            var source = new ol.source.Vector({
-                features: features,
-                wrapX: false
-            });
+            var source = new ol.source.Vector({ wrapX: false });
             var _drawLayer = new ol.layer.Vector({
                 source: source
             });
-            self.addLayer('_drawLayer', _drawLayer,true);
+            self.addLayer('_drawLayer', _drawLayer);
             // self._featureOverlay = new ol.layer.Vector({ //画图所用的layer对象
             //     source: new ol.source.Vector({
             //         features: features
@@ -713,20 +702,19 @@
                 type: /** @type {ol.geom.GeometryType} */ (type === "Box" ? "Circle" : type),
                 geometryFunction: type === "Box" ? ol.interaction.Draw.createBox() : undefined
             });
-            if (events) {
-                if (!OpenMap.is(events, 'Object')) {
-                    console.warn('事件参数错误！');
-                    return;
-                } else {
-                    for (var e in events) {
-                        if (events.hasOwnProperty(e)) {
-                            self._draw.dispatchEvent(e);
-                            self._draw.on(e, events[e]);
-                        }
+
+            map.addInteraction(self._draw);
+            if (events && !OpenMap.is(events, 'Object')) {
+                console.warn('事件参数错误！');
+                return;
+            } else {
+                for (var e in events) {
+                    if (events.hasOwnProperty(e)) {
+                        self._draw.dispatchEvent(e);
+                        self._draw.on(e, events[e]);
                     }
                 }
             }
-            map.addInteraction(self._draw);
         },
         /**
          * @desc 返回绘画对象
@@ -740,13 +728,14 @@
         closeDraw: function () {
             if (this._draw) {
                 this._map.removeInteraction(this._draw);
+                this._draw = null;
             }
         },
         /**
         * 路况图层
         *'beilun:TRANETROAD','FEATUREGUI,FCODE,FNAME,FSCALE,DISPLAY,GEOMETRY'
         */
-        adminLayerVisibility: function (typeName, propertyName, callbackName,filter) {
+        adminLayerVisibility: function (typeName, propertyName, callbackName, filter,fn) {
             var self = this;
             //wfs回调方法
             window[callbackName] = function (res) {
@@ -755,6 +744,7 @@
                 self.roadFeatures = format.readFeatures(res, { featureProjection: myprojection });
                 self.getLayer('roadLayer').getSource().addFeatures(self.roadFeatures);
                 // adminWfsLayer.getSource().addFeatures(self.roadFeatures);
+                if(fn)fn();
             };
             function getFeature(options) {
                 $.ajax('http://192.168.3.233:8888/geoserver/beilun/wfs', {
@@ -1032,6 +1022,7 @@
             var pCoordinates =[];
             var cnt =0;
             if (roadFeature) {
+// <<<<<<< Updated upstream
             	selectedFeatures.clear();
             	var extent = [180,90,0,0];
 		
@@ -1077,6 +1068,24 @@
                     }else{
                     	pCoordinates[cnt]= coordinates[coordinates.length-1];
                     	cnt++;
+// =======
+                // selectedFeatures.clear();
+                // var extent = [180, 90, 0, 0];
+
+                // for (var i = 0; i < roadFeature.length; i++) {
+                //     selectedFeatures.push(roadFeature[i]);
+                //     if (extent[0] > roadFeature[i].getGeometry().getExtent()[0]) {
+                //         extent[0] = roadFeature[i].getGeometry().getExtent()[0];
+                //     }
+                //     if (extent[1] > roadFeature[i].getGeometry().getExtent()[1]) {
+                //         extent[1] = roadFeature[i].getGeometry().getExtent()[1];
+                //     }
+                //     if (extent[2] < roadFeature[i].getGeometry().getExtent()[2]) {
+                //         extent[2] = roadFeature[i].getGeometry().getExtent()[2];
+                //     }
+                //     if (extent[3] < roadFeature[i].getGeometry().getExtent()[3]) {
+                //         extent[3] = roadFeature[i].getGeometry().getExtent()[3];
+// >>>>>>> Stashed changes
                     }
                 }
                 
@@ -1106,14 +1115,13 @@
             }
         },
         //构建路段查询xml
-        buildFilterBySigmentIds:function(sigmentIds){
-        	var xml =  '<Filter xmlns="http://www.opengis.net/ogc"><Or>';
-        	for(var i=0;i<sigmentIds.length;i++)
-        	{
-        		xml +='<PropertyIsEqualTo><PropertyName>FEATUREGUI</PropertyName><Literal>'+sigmentIds[i]+'</Literal></PropertyIsEqualTo>';
-        	}
-        	xml +='</Or></Filter>';
-        	return xml;
+        buildFilterBySigmentIds: function (sigmentIds) {
+            var xml = '<Filter xmlns="http://www.opengis.net/ogc"><Or>';
+            for (var i = 0; i < sigmentIds.length; i++) {
+                xml += '<PropertyIsEqualTo><PropertyName>FEATUREGUI</PropertyName><Literal>' + sigmentIds[i] + '</Literal></PropertyIsEqualTo>';
+            }
+            xml += '</Or></Filter>';
+            return xml;
         }
     };
     return OpenMap;
@@ -1180,7 +1188,7 @@ function dcanvas(ele, data) {
  * @param {*} data
  */
 function dcanvasCircle(ele, data) {
-	// 一个canvas标签
+    // 一个canvas标签
     var canvas = ele;
     var x = data.centerX;
     var y = data.centerY;
