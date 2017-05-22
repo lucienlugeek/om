@@ -975,6 +975,40 @@
                 }
             }
 
+        },       
+        /**
+         * @desc 添加vector图层选择事件
+         */
+        addLayerSelectListener: function (layerName,selectCondition,style,filedName) {
+            var layer = this.getLayer(layerName);
+            var self = this;
+            //单个选择要素
+            var layerSelect = new ol.interaction.Select({
+                condition: selectCondition,  //ol.events.condition.pointerMove, click,
+                layers: [layer],
+                style: style
+            });
+
+            layerSelect.on('select', function (evt) {
+                var container = document.getElementById('popup');
+                if (evt.selected.length > 0) {
+                    self._map.getViewport().style.cursor = 'hand';
+                    var coordinate = evt.mapBrowserEvent.coordinate;                    
+                    var content = document.getElementById('popup-content');
+                    var title = document.getElementById('popup-title');
+                    var overlay = self._map.getOverlayById("openOverlay");                    
+                    overlay.setPosition(coordinate);
+                    content.innerHTML = evt.selected[0].get(filedName);
+                    container.style.display = 'block';
+                    title.innerHTML = "提示信息";
+                    title.style.display = 'block';
+                } else {
+                    container.style.display = 'none';
+                    self._map.getViewport().style.cursor = 'default';
+                }
+            });
+            self._map.addInteraction(layerSelect);
+            return layerSelect;
         },
         //添加路网鼠标悬浮事件
         addLayerMoveListener: function (layerName) {
