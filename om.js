@@ -197,18 +197,33 @@
                         rO = 28;
                         rI = 18;
                     }
-                    style = new ol.style.Style({
-                        image: new ol.style.Icon({
-                            img: dcanvasCircle($('canvas.process').clone().show().get(0), {
-                                'centerX': '45',
-                                'centerY': '45',
-                                'radiusOutside': rO,
-                                'radiusInside': rI,
-                                'size': size
-                            }),
-                            imgSize: [90, 90]
-                        }),
-                    });
+                    if(options.icon){
+                	  style = new ol.style.Style({
+                          image: size ==1 ? options.icon:new ol.style.Icon({
+                              img: dcanvasCircle($('canvas.process').clone().show().get(0), {
+                                  'centerX': '45',
+                                  'centerY': '45',
+                                  'radiusOutside': rO,
+                                  'radiusInside': rI,
+                                  'size': size
+                              }),
+                              imgSize: [90, 90]
+                          }),
+                      });
+                  }else{
+                  style = new ol.style.Style({
+                      image:new ol.style.Icon({
+                          img: dcanvasCircle($('canvas.process').clone().show().get(0), {
+                              'centerX': '45',
+                              'centerY': '45',
+                              'radiusOutside': rO,
+                              'radiusInside': rI,
+                              'size': size
+                          }),
+                          imgSize: [90, 90]
+                      }),
+                  });
+                  }
                     return style;
                 }
             });
