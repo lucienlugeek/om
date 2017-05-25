@@ -657,7 +657,7 @@
          *        events : drawstart,drawend,change,propertychange
          */
         openDraw: function (type, events) {
-            if (type === 'undefined' || ['Point', 'LineString', 'Box', 'Polygon', 'Circle'].indexOf(type) === -1) {
+            if (typeof type === 'undefined' || ['Point', 'LineString', 'Box', 'Polygon', 'Circle'].indexOf(type) === -1) {
                 console.error('draw type is error!');
                 return;
             }
@@ -759,7 +759,7 @@
                         srsname: options.srid,
                         outputFormat: 'text/javascript',
                         viewparams: options.viewparams,
-                        bbox: (options.extent === undefined) ? undefined : options.extent.join(',') + ',' + options.srid,//与filter只能用一个
+                        bbox: (typeof options.extent === 'undefined') ? undefined : options.extent.join(',') + ',' + options.srid,//与filter只能用一个
                         filter: options.filter
                     },
                     dataType: 'jsonp',
