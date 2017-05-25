@@ -147,14 +147,12 @@
             if (options && options.data) {
                 $.each(options.data, function (index, tempData) {
                     var coordinates = [parseFloat(tempData['lon']), parseFloat(tempData['lat'])];
-                    features[index] = new ol.Feature(new ol.geom.Point(coordinates));
+                    features[index] = new ol.Feature({geometry:new ol.geom.Point(coordinates),weight:tempData['weight']});
                 });
             }
-            return new ol.layer.Heatmap({
-                source: new ol.source.Cluster({
-                    source: new ol.source.Vector({
-                        features: features
-                    })
+            return new ol.layer.Heatmap({               
+                source: new ol.source.Vector({
+                        features: features                
                 }),
                 blur: options && options.blur || 30,
                 radius: options && options.radius || 30
