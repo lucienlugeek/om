@@ -735,7 +735,7 @@
         * 路况图层
         *'beilun:TRANETROAD','FEATUREGUI,FCODE,FNAME,FSCALE,DISPLAY,GEOMETRY'
         */
-        adminLayerVisibility: function (typeName, propertyName, callbackName, filter,fn) {
+        adminLayerVisibility: function (typeName, propertyName, callbackName, filter, fn) {
             var self = this;
             //wfs回调方法
             window[callbackName] = function (res) {
@@ -744,7 +744,7 @@
                 self.roadFeatures = format.readFeatures(res, { featureProjection: myprojection });
                 self.getLayer('roadLayer').getSource().addFeatures(self.roadFeatures);
                 // adminWfsLayer.getSource().addFeatures(self.roadFeatures);
-                if(fn)fn();
+                if (fn) fn();
             };
             function getFeature(options) {
                 $.ajax('http://192.168.3.233:8888/geoserver/beilun/wfs', {
@@ -965,11 +965,11 @@
                 }
             }
 
-        },       
+        },
         /**
          * @desc 添加vector图层选择事件
          */
-        addLayerSelectListener: function (layerName,selectCondition,style,filedName) {
+        addLayerSelectListener: function (layerName, selectCondition, style, filedName) {
             var layer = this.getLayer(layerName);
             var self = this;
             //单个选择要素
@@ -983,10 +983,10 @@
                 var container = document.getElementById('popup');
                 if (evt.selected.length > 0) {
                     self._map.getViewport().style.cursor = 'hand';
-                    var coordinate = evt.mapBrowserEvent.coordinate;                    
+                    var coordinate = evt.mapBrowserEvent.coordinate;
                     var content = document.getElementById('popup-content');
                     var title = document.getElementById('popup-title');
-                    var overlay = self._map.getOverlayById("openOverlay");                    
+                    var overlay = self._map.getOverlayById("openOverlay");
                     overlay.setPosition(coordinate);
                     content.innerHTML = evt.selected[0].get(filedName);
                     container.style.display = 'block';
@@ -1048,104 +1048,73 @@
             self._map.addInteraction(adminLayerSelect);
             return adminLayerSelect;
         },
-      //选中某道路
-        locateRoad: function (adminLayerSelect,tempRoadlayer) {
+        //选中某道路
+        locateRoad: function (adminLayerSelect, tempRoadlayer) {
             var selectedFeatures = adminLayerSelect.getFeatures();
             var roadFeature = this.roadFeatures;
-            var pFeatures =[];
-            var pCoordinates =[];
-            var cnt =0;
-            if (roadFeature) {
-// <<<<<<< Updated upstream
-            	selectedFeatures.clear();
-            	var extent = [180,90,0,0];
-		
+            var pFeatures = [];
+            var pCoordinates = [];
+            var cnt = 0;
+            if (roadFeature && roadFeature.length) {
+                selectedFeatures.clear();
+                var extent = [180, 90, 0, 0];
+
                 for (var i = 0; i < roadFeature.length; i++) {
                     selectedFeatures.push(roadFeature[i]);
-		    /*if(extent[0] > roadFeature[i].getGeometry().getExtent()[0]){
-			extent[0]  = roadFeature[i].getGeometry().getExtent()[0];
-		    }
-		    if(extent[1] > roadFeature[i].getGeometry().getExtent()[1]){
-			extent[1]  = roadFeature[i].getGeometry().getExtent()[1];
-		    }
-		    if(extent[2] < roadFeature[i].getGeometry().getExtent()[2]){
-			extent[2]  = roadFeature[i].getGeometry().getExtent()[2];
-		    }
-		     if(extent[3] < roadFeature[i].getGeometry().getExtent()[3]){
-			extent[3]  = roadFeature[i].getGeometry().getExtent()[3];
-		    }
-		    this._map.getView().fit(extent);
-		    */
                     //添加路段的两个端点，若是重复则删除存放的同样的端点，不重复则增加  
                     //判断第一个点
                     var geo = roadFeature[i].getGeometry();
                     var coordinates = geo.getCoordinates();
-                    if(pCoordinates.indexOf(coordinates[0])==1){
-                    	for(var j=0; j<pCoordinates.length; j++) {
-                    	    if(pCoordinates[j] == coordinates[0]) {
-                    	      arr.splice(j, 1);
-                    	      cnt--;
-                    	    }
-                    	  }
-                    }else{
-                    	pCoordinates[cnt]= coordinates[0];
-                    	cnt++;
+                    if (pCoordinates.indexOf(coordinates[0]) == 1) {
+                        for (var j = 0; j < pCoordinates.length; j++) {
+                            if (pCoordinates[j] == coordinates[0]) {
+                                arr.splice(j, 1);
+                                cnt--;
+                            }
+                        }
+                    } else {
+                        pCoordinates[cnt] = coordinates[0];
+                        cnt++;
                     }
                     //判断最后一个点
-                    if(pCoordinates.indexOf(coordinates[coordinates.length-1])==1){
-                    	for(var j=0; j<pCoordinates.length; j++) {
-                    	    if(pCoordinates[j] == coordinates[coordinates.length-1]) {
-                    	      arr.splice(j, 1);
-                    	      cnt--;
-                    	    }
-                    	  }
-                    }else{
-                    	pCoordinates[cnt]= coordinates[coordinates.length-1];
-                    	cnt++;
-// =======
-                // selectedFeatures.clear();
-                // var extent = [180, 90, 0, 0];
-
-                // for (var i = 0; i < roadFeature.length; i++) {
-                //     selectedFeatures.push(roadFeature[i]);
-                //     if (extent[0] > roadFeature[i].getGeometry().getExtent()[0]) {
-                //         extent[0] = roadFeature[i].getGeometry().getExtent()[0];
-                //     }
-                //     if (extent[1] > roadFeature[i].getGeometry().getExtent()[1]) {
-                //         extent[1] = roadFeature[i].getGeometry().getExtent()[1];
-                //     }
-                //     if (extent[2] < roadFeature[i].getGeometry().getExtent()[2]) {
-                //         extent[2] = roadFeature[i].getGeometry().getExtent()[2];
-                //     }
-                //     if (extent[3] < roadFeature[i].getGeometry().getExtent()[3]) {
-                //         extent[3] = roadFeature[i].getGeometry().getExtent()[3];
-// >>>>>>> Stashed changes
+                    if (pCoordinates.indexOf(coordinates[coordinates.length - 1]) == 1) {
+                        for (var j = 0; j < pCoordinates.length; j++) {
+                            if (pCoordinates[j] == coordinates[coordinates.length - 1]) {
+                                arr.splice(j, 1);
+                                cnt--;
+                            }
+                        }
+                    } else {
+                        pCoordinates[cnt] = coordinates[coordinates.length - 1];
+                        cnt++;
                     }
                 }
-                
+
                 //计算最大距离
-                var maxdis =0;
-                var cor1 =pCoordinates[0];
-                var cor2 =pCoordinates[0];
-                for(var m=0; m<pCoordinates.length-1; m++) {
-                	for(var n=m+1; n<pCoordinates.length; n++) {
-                		var dis = Math.sqrt(Math.pow((pCoordinates[m][0] - pCoordinates[n][0]), 2) + Math.pow((pCoordinates[m][1] - pCoordinates[n][1]), 2));
-                		if(dis > maxdis){
-                			maxdis =dis;
-                			cor1 =pCoordinates[m];
-                			cor2 =pCoordinates[n];
-                		}
-                	}
-            	}
-                
+                var maxdis = 0;
+                var cor1 = pCoordinates[0];
+                var cor2 = pCoordinates[0];
+                for (var m = 0; m < pCoordinates.length - 1; m++) {
+                    for (var n = m + 1; n < pCoordinates.length; n++) {
+                        var dis = Math.sqrt(Math.pow((pCoordinates[m][0] - pCoordinates[n][0]), 2) + Math.pow((pCoordinates[m][1] - pCoordinates[n][1]), 2));
+                        if (dis > maxdis) {
+                            maxdis = dis;
+                            cor1 = pCoordinates[m];
+                            cor2 = pCoordinates[n];
+                        }
+                    }
+                }
+
                 //添加起止点
-                pFeatures[0]=new ol.Feature(new ol.geom.Point(cor1));
-                pFeatures[1]=new ol.Feature(new ol.geom.Point(cor2));
+                pFeatures[0] = new ol.Feature(new ol.geom.Point(cor1));
+                pFeatures[1] = new ol.Feature(new ol.geom.Point(cor2));
                 tempRoadlayer.getSource().addFeatures(pFeatures);
-                
+
                 //定位道路
-                var lineGeo =new ol.geom.LineString([cor1,cor2]);
+                var lineGeo = new ol.geom.LineString([cor1, cor2]);
                 this._map.getView().fit(lineGeo);
+            }else{
+                console.log('没有路段数据');
             }
         },
         //构建路段查询xml
