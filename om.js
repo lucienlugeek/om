@@ -147,12 +147,12 @@
             if (options && options.data) {
                 $.each(options.data, function (index, tempData) {
                     var coordinates = [parseFloat(tempData['lon']), parseFloat(tempData['lat'])];
-                    features[index] = new ol.Feature({geometry:new ol.geom.Point(coordinates),weight:tempData['weight']});
+                    features[index] = new ol.Feature({ geometry: new ol.geom.Point(coordinates), weight: tempData['weight'] });
                 });
             }
-            return new ol.layer.Heatmap({               
+            return new ol.layer.Heatmap({
                 source: new ol.source.Vector({
-                        features: features                
+                    features: features
                 }),
                 blur: options && options.blur || 30,
                 radius: options && options.radius || 30
@@ -172,7 +172,7 @@
             if (options && options.data) {
                 $.each(options.data, function (index, tempData) {
                     var coordinates = [parseFloat(tempData['lon']), parseFloat(tempData['lat'])];
-                    features[index] = new ol.Feature({ geometry: new ol.geom.Point(coordinates), image:tempData['image']});
+                    features[index] = new ol.Feature({ geometry: new ol.geom.Point(coordinates), image: tempData['image'] });
                 });
             }
             return new ol.layer.Vector({
@@ -197,45 +197,45 @@
                         rO = 28;
                         rI = 18;
                     }
-					//判断是否当前只有一个feature，若是只有一个则check 是否有默认图标设置
+                    //判断是否当前只有一个feature，若是只有一个则check 是否有默认图标设置
                     var icon;
-                    if(feas.length == 1){
-                    	var img = feas[0].get("image");
-						if(img){
-							icon = new ol.style.Icon(({
-								rotation: 0,
-								src: img
-							}));
-						}
-                    } 
-                   
-                    if(icon){
-                	  style = new ol.style.Style({
-                          image: size ==1 ? icon:new ol.style.Icon({
-                              img: dcanvasCircle($('canvas.process').clone().show().get(0), {
-                                  'centerX': '45',
-                                  'centerY': '45',
-                                  'radiusOutside': rO,
-                                  'radiusInside': rI,
-                                  'size': size
-                              }),
-                              imgSize: [90, 90]
-                          }),
-                      });
-                  }else{
-                  style = new ol.style.Style({
-                      image:new ol.style.Icon({
-                          img: dcanvasCircle($('canvas.process').clone().show().get(0), {
-                              'centerX': '45',
-                              'centerY': '45',
-                              'radiusOutside': rO,
-                              'radiusInside': rI,
-                              'size': size
-                          }),
-                          imgSize: [90, 90]
-                      }),
-                  });
-                  }
+                    if (feas.length == 1) {
+                        var img = feas[0].get("image");
+                        if (img) {
+                            icon = new ol.style.Icon(({
+                                rotation: 0,
+                                src: img
+                            }));
+                        }
+                    }
+
+                    if (icon) {
+                        style = new ol.style.Style({
+                            image: size == 1 ? icon : new ol.style.Icon({
+                                img: dcanvasCircle($('canvas.process').clone().show().get(0), {
+                                    'centerX': '45',
+                                    'centerY': '45',
+                                    'radiusOutside': rO,
+                                    'radiusInside': rI,
+                                    'size': size
+                                }),
+                                imgSize: [90, 90]
+                            }),
+                        });
+                    } else {
+                        style = new ol.style.Style({
+                            image: new ol.style.Icon({
+                                img: dcanvasCircle($('canvas.process').clone().show().get(0), {
+                                    'centerX': '45',
+                                    'centerY': '45',
+                                    'radiusOutside': rO,
+                                    'radiusInside': rI,
+                                    'size': size
+                                }),
+                                imgSize: [90, 90]
+                            }),
+                        });
+                    }
                     return style;
                 }
             });
@@ -421,19 +421,15 @@
                                 anchor: fea.get('anchor')
                             })
                         });
-                    }
+                    },
+                    zIndex: (typeof option.zIndex !== 'undefined' ? option.zIndex : 0)
                 });
                 self.addLayer(option.layer, _layer);
             }
-            var fea = new ol.Feature({
-                geometry: new ol.geom.Point(option.position),
-                anchor: option.anchor,
-                image: option.image,
-                onClick: option.onClick,
-                extData: option.extData,
-                layerName: option.layer,
-                rotation: option.rotation
-            });
+            var prop = $.extend({}, option,
+                { geometry: new ol.geom.Point(option.position) }
+            );
+            var fea = new ol.Feature(prop);
             fea.setId(option.id);
             _layer.getSource().addFeatures([fea]);
             if (option.visible !== undefined) {
@@ -1138,7 +1134,7 @@
                 //定位道路
                 var lineGeo = new ol.geom.LineString([cor1, cor2]);
                 this._map.getView().fit(lineGeo);
-            }else{
+            } else {
                 console.log('没有路段数据');
             }
         },
