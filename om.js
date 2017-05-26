@@ -147,21 +147,19 @@
             if (options && options.data) {
                 $.each(options.data, function (index, tempData) {
                     var coordinates = [parseFloat(tempData['lon']), parseFloat(tempData['lat'])];
-                    features[index] = new ol.Feature(new ol.geom.Point(coordinates));
+                    features[index] = new ol.Feature({geometry:new ol.geom.Point(coordinates),weight:tempData['weight']});
                 });
             }
-            return new ol.layer.Heatmap({
-                source: new ol.source.Cluster({
-                    source: new ol.source.Vector({
-                        features: features
-                    })
+            return new ol.layer.Heatmap({               
+                source: new ol.source.Vector({
+                        features: features                
                 }),
                 blur: options && options.blur || 30,
                 radius: options && options.radius || 30
             });
         },
         /**
-         * 初始化聚合图：heatmap layer
+         * 初始化聚合图：Cluster layer
          */
         globalClusterLayer: function (options) {
             /*if (typeof options === 'undefined'
@@ -174,7 +172,7 @@
             if (options && options.data) {
                 $.each(options.data, function (index, tempData) {
                     var coordinates = [parseFloat(tempData['lon']), parseFloat(tempData['lat'])];
-                    features[index] = new ol.Feature(new ol.geom.Point(coordinates));
+                    features[index] = new ol.Feature({ geometry: new ol.geom.Point(coordinates), image:tempData['image']});
                 });
             }
             return new ol.layer.Vector({
@@ -199,18 +197,45 @@
                         rO = 28;
                         rI = 18;
                     }
-                    style = new ol.style.Style({
-                        image: new ol.style.Icon({
-                            img: dcanvasCircle($('canvas.process').clone().show().get(0), {
-                                'centerX': '45',
-                                'centerY': '45',
-                                'radiusOutside': rO,
-                                'radiusInside': rI,
-                                'size': size
-                            }),
-                            imgSize: [90, 90]
-                        }),
-                    });
+					//判断是否当前只有一个feature，若是只有一个则check 是否有默认图标设置
+                    var icon;
+                    if(feas.length == 1){
+                    	var img = feas[0].get("image");
+						if(img){
+							icon = new ol.style.Icon(({
+								rotation: 0,
+								src: img
+							}));
+						}
+                    } 
+                   
+                    if(icon){
+                	  style = new ol.style.Style({
+                          image: size ==1 ? icon:new ol.style.Icon({
+                              img: dcanvasCircle($('canvas.process').clone().show().get(0), {
+                                  'centerX': '45',
+                                  'centerY': '45',
+                                  'radiusOutside': rO,
+                                  'radiusInside': rI,
+                                  'size': size
+                              }),
+                              imgSize: [90, 90]
+                          }),
+                      });
+                  }else{
+                  style = new ol.style.Style({
+                      image:new ol.style.Icon({
+                          img: dcanvasCircle($('canvas.process').clone().show().get(0), {
+                              'centerX': '45',
+                              'centerY': '45',
+                              'radiusOutside': rO,
+                              'radiusInside': rI,
+                              'size': size
+                          }),
+                          imgSize: [90, 90]
+                      }),
+                  });
+                  }
                     return style;
                 }
             });
