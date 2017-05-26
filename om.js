@@ -399,7 +399,6 @@
                     }
                 });
                 self.addLayer(option.layer, _layer);
-                self.addLayerListener(_layer);
             }
             var fea = new ol.Feature({
                 geometry: new ol.geom.Point(option.position),
@@ -627,7 +626,7 @@
         addLayerListener: function (layer) {
             //单个选择要素
             var layerSelect = new ol.interaction.Select({
-                condition: ol.events.condition.click,
+                condition: ol.events.condition.singleClick,
                 layers: [layer],
                 style: function (fea) {//点击marker时不发生样式的变化，还是使用本身的image作为src
                     return new ol.style.Style({
@@ -650,6 +649,7 @@
                 });
             });
             this._map.addInteraction(layerSelect);
+            return layerSelect;
         },
         /**
          * @desc 开启绘画功能
