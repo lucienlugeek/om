@@ -1,14 +1,13 @@
-﻿// framework based on openlayers Version v4.0.1 with jQuery
-//  by lucien and zouh
+﻿·// framework based on openlayers Version v4.0.1 with jQuery
 (function (root, factory) {
     if (typeof exports === "object") {
         module.exports = factory();
     } else if (typeof define === 'function' && define.amd) {
         define(['ol'], factory);
     } else {
-        root.OpenMap = factory(root.ol);
+        root.OpenMap = factory(root.ol,root.Highcharts);
     }
-}(this, function (ol) {
+}(this, function (ol,hc) {
     var OpenMap = this.OpenMap = function () {
         if (arguments.length) {
             this.init.apply(this, arguments);
@@ -172,7 +171,7 @@
             if (options && options.data) {
                 $.each(options.data, function (index, tempData) {
                     var coordinates = [parseFloat(tempData['lon']), parseFloat(tempData['lat'])];
-                    features[index] = new ol.Feature({ geometry: new ol.geom.Point(coordinates), image: tempData['image'] });
+                    features[index] = new ol.Feature({ geometry: new ol.geom.Point(coordinates), image:tempData['image'], extData:tempData});
                 });
             }
             return new ol.layer.Vector({
@@ -373,11 +372,18 @@
         /**
          * @desc 添加层
          */
-        addLayer: function (layerName, layerObj) {
-            if (arguments.length !== 2) return;
-            if (this.getLayer(layerName)) return;
-            this._layer[layerName] = layerObj;
-            this._map.addLayer(layerObj);
+        addLayer: function (layerName, layerObj, force) {
+            if (force) {
+                if (arguments.length !== 3) return;
+                this._layer[layerName] = layerObj;
+                this._map.removeLayer(layerName);
+                this._map.addLayer(layerObj);
+            } else {
+                if (arguments.length !== 2) return;
+                if (this.getLayer(layerName)) return;
+                this._layer[layerName] = layerObj;
+                this._map.addLayer(layerObj);
+            }
             return layerObj;
         },
         /**
@@ -458,7 +464,8 @@
                             // rotation: fea.get('rotation') || 0,
                             src: feature.get('image')//,
                             //anchor: [10,10]
-                        })
+                        }),
+                        text:self.createTextStyle(feature.get('extData').hphm)
                     });
                 }
             });
@@ -467,7 +474,7 @@
             if (options.data) {
                 $.each(options.data, function (index, tempData) {
                     var coordinates = [parseFloat(tempData['lon']), parseFloat(tempData['lat'])];
-                    features[index] = new ol.Feature({ geometry: new ol.geom.Point(coordinates), image: tempData['image'] });
+                    features[index] = new ol.Feature({ geometry: new ol.geom.Point(coordinates), image: tempData['image'],extData:tempData});
                 });
             }
             _layer.getSource().addFeatures(features);
@@ -749,7 +756,6 @@
         closeDraw: function () {
             if (this._draw) {
                 this._map.removeInteraction(this._draw);
-                this._draw = null;
             }
         },
         /**
@@ -990,37 +996,105 @@
         /**
          * @desc 添加vector图层选择事件
          */
-        addLayerSelectListener: function (layerName, selectCondition, style, filedName) {
+        addLayerSelectListener: function (layerName,selectCondition,callback) {
             var layer = this.getLayer(layerName);
             var self = this;
             //单个选择要素
             var layerSelect = new ol.interaction.Select({
                 condition: selectCondition,  //ol.events.condition.pointerMove, click,
                 layers: [layer],
-                style: style
+                style: function (features) {
+                		var fea;
+                		if(!features.get("extData")){
+                			var featuresArray = features.get('features');
+	            			if(featuresArray.length == 1){
+	                			fea = featuresArray[0];
+		                	} else{
+		                		var size = featuresArray.length;
+		                		var rO, rI;
+			                    if (size >= 100) {
+			                        rO = 44;
+			                        rI = 33;
+			                    } else if (size >= 10 && size <= 99) {
+			                        rO = 32;
+			                        rI = 24;
+			                    } else {
+			                        rO = 28;
+			                        rI = 18;
+			                    }
+		                		return new ol.style.Style({
+			                          image: new ol.style.Icon({
+			                              img: dcanvasCircle($('canvas.process').clone().show().get(0), {
+			                                  'centerX': '45',
+			                                  'centerY': '45',
+			                                  'radiusOutside': rO,
+			                                  'radiusInside': rI,
+			                                  'size': size
+			                              }),
+			                              imgSize: [90, 90]
+			                          }),
+			                      });
+		                	}
+                		} else{
+                			fea = features;
+                		}
+                		if(fea){
+                			var extData = fea.get("extData");
+	                		if(extData.gpsState == 1){ //离线
+	                			var img = "views/key_vehicle/img/select_pic_map_car_lixian.png";
+	                		} else{
+	                			var img = "views/key_vehicle/img/select_pic_map_car_zaixian.png";
+	                		}
+	                		callback(extData);
+	                        return new ol.style.Style({
+	                            image: new ol.style.Icon({
+	//                              rotation: fea.get('rotation') || 0,
+	                                src: img
+	//                              anchor: fea.get('anchor')
+	                            }),
+	                            text:self.createTextStyle(extData.hphm)
+	                        });
+                		}
+                    }
             });
 
             layerSelect.on('select', function (evt) {
-                var container = document.getElementById('popup');
                 if (evt.selected.length > 0) {
-                    self._map.getViewport().style.cursor = 'hand';
-                    var coordinate = evt.mapBrowserEvent.coordinate;
-                    var content = document.getElementById('popup-content');
-                    var title = document.getElementById('popup-title');
-                    var overlay = self._map.getOverlayById("openOverlay");
-                    overlay.setPosition(coordinate);
-                    content.innerHTML = evt.selected[0].get(filedName);
-                    container.style.display = 'block';
-                    title.innerHTML = "提示信息";
-                    title.style.display = 'block';
-                } else {
-                    container.style.display = 'none';
-                    self._map.getViewport().style.cursor = 'default';
                 }
             });
             self._map.addInteraction(layerSelect);
             return layerSelect;
         },
+        
+        //添加车辆号牌提示
+        createTextStyle: function(carno){
+        	var self = this;
+        	var align = "center";  //center 'left', 'right', 'center', 'end' or 'start'. Default is 'start'.
+           var baseline = "hanging";  // middle 'bottom', 'top', 'middle', 'alphabetic', 'hanging', 'ideographic'. Default is 'alphabetic'.
+           var size = "12px";  
+           var offsetX = 0;  
+           var offsetY = 10;  
+           var weight = "60"; //normal  bold  100
+           var rotation = "0";//feature.get('rotation');  
+           var font =  weight + ' ' + size + ' ' + "Arial";  //
+           var fillColor = '#4293ee';  
+           var outlineColor = '#4293ee';  
+           var outlineWidth = 0;  
+     
+           return new ol.style.Text({  
+               textAlign: align,  
+               textBaseline: baseline,  
+               font: font,  
+               text: self._map.getView().getZoom() > 14 ?carno:'',  
+               fill: new ol.style.Fill({color: fillColor}),  
+               stroke: new ol.style.Stroke({color: outlineColor, width: outlineWidth}),  
+               offsetX: offsetX,  
+               offsetY: offsetY,  
+               rotation: rotation  
+           });
+        },
+        
+        
         //添加路网鼠标悬浮事件
         addLayerMoveListener: function (layerName) {
             var adminWfsLayer = this.getLayer(layerName);
@@ -1069,8 +1143,46 @@
             self._map.addInteraction(adminLayerSelect);
             return adminLayerSelect;
         },
-        //选中某道路
-        locateRoad: function (adminLayerSelect, tempRoadlayer) {
+        
+         //选中某车辆
+        locateCar: function(layerSelect, layerName, plateName,callback) {
+        	console.log(layerName);
+        	var czoom = this._map.getView().getZoom();
+			var selectedFeatures = layerSelect.getFeatures();
+			var layer = this.getLayer(layerName);
+			var features = layer.getSource().getFeatures();
+			if(features) {
+				selectedFeatures.clear();
+				var feature;
+				var hasResult = true;
+				for(var i = 0; i < features.length; i++) {
+					if(layerName=="carMarkerLayer"){
+						feature = features[i];
+					} else{
+						var currentFeature = features[i];
+						var subFeatures = currentFeature.get('features');
+						if(subFeatures.length == 1){
+							feature = subFeatures[0];
+						}
+					}
+					
+					var hphm = feature.get("extData").hphm;
+					if(hphm == plateName) {
+						selectedFeatures.push(feature);
+						hasResult = false;
+						break;
+					}
+				}
+				if(hasResult){
+					callback();
+				} else{
+					this._map.getView().fit(feature.getGeometry());
+					this._map.getView().setZoom(czoom);
+				}
+			}
+		},
+      	//选中某道路
+        locateRoad: function (adminLayerSelect,tempRoadlayer) {
             var selectedFeatures = adminLayerSelect.getFeatures();
             var roadFeature = this.roadFeatures;
             var pFeatures = [];
