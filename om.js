@@ -1,4 +1,5 @@
 ﻿// framework based on openlayers Version v4.0.1 with jQuery
+//  by lucien and zouh
 (function (root, factory) {
     if (typeof exports === "object") {
         module.exports = factory();
@@ -198,6 +199,7 @@
                     }
                     //判断是否当前只有一个feature，若是只有一个则check 是否有默认图标设置
                     var icon;
+                    var textStyle;
                     if (feas.length == 1) {
                         var img = feas[0].get("image");
                         if (img) {
@@ -205,6 +207,10 @@
                                 rotation: 0,
                                 src: img
                             }));
+                        }
+                        
+                        if(feas[0].get("extData").hphm){
+                            textStyle = self.createTextStyle(feas[0].get("extData").hphm);
                         }
                     }
 
@@ -220,6 +226,7 @@
                                 }),
                                 imgSize: [90, 90]
                             }),
+                            text:size == 1 ? textStyle : ""
                         });
                     } else {
                         style = new ol.style.Style({
@@ -1004,57 +1011,57 @@
                 condition: selectCondition,  //ol.events.condition.pointerMove, click,
                 layers: [layer],
                 style: function (features) {
-                		var fea;
-                		if(!features.get("extData")){
-                			var featuresArray = features.get('features');
-	            			if(featuresArray.length == 1){
-	                			fea = featuresArray[0];
-		                	} else{
-		                		var size = featuresArray.length;
-		                		var rO, rI;
-			                    if (size >= 100) {
-			                        rO = 44;
-			                        rI = 33;
-			                    } else if (size >= 10 && size <= 99) {
-			                        rO = 32;
-			                        rI = 24;
-			                    } else {
-			                        rO = 28;
-			                        rI = 18;
-			                    }
-		                		return new ol.style.Style({
-			                          image: new ol.style.Icon({
-			                              img: dcanvasCircle($('canvas.process').clone().show().get(0), {
-			                                  'centerX': '45',
-			                                  'centerY': '45',
-			                                  'radiusOutside': rO,
-			                                  'radiusInside': rI,
-			                                  'size': size
-			                              }),
-			                              imgSize: [90, 90]
-			                          }),
-			                      });
-		                	}
-                		} else{
-                			fea = features;
-                		}
-                		if(fea){
-                			var extData = fea.get("extData");
-	                		if(extData.gpsState == 1){ //离线
-	                			var img = "views/key_vehicle/img/select_pic_map_car_lixian.png";
-	                		} else{
-	                			var img = "views/key_vehicle/img/select_pic_map_car_zaixian.png";
-	                		}
-	                		callback(extData);
-	                        return new ol.style.Style({
-	                            image: new ol.style.Icon({
-	//                              rotation: fea.get('rotation') || 0,
-	                                src: img
-	//                              anchor: fea.get('anchor')
-	                            }),
-	                            text:self.createTextStyle(extData.hphm)
-	                        });
-                		}
+                        var fea;
+                        if(!features.get("extData")){
+                            var featuresArray = features.get('features');
+                            if(featuresArray.length == 1){
+                                fea = featuresArray[0];
+                            } else{
+                                var size = featuresArray.length;
+                                var rO, rI;
+                                if (size >= 100) {
+                                    rO = 44;
+                                    rI = 33;
+                                } else if (size >= 10 && size <= 99) {
+                                    rO = 32;
+                                    rI = 24;
+                                } else {
+                                    rO = 28;
+                                    rI = 18;
+                                }
+                                return new ol.style.Style({
+                                      image: new ol.style.Icon({
+                                          img: dcanvasCircle($('canvas.process').clone().show().get(0), {
+                                              'centerX': '45',
+                                              'centerY': '45',
+                                              'radiusOutside': rO,
+                                              'radiusInside': rI,
+                                              'size': size
+                                          }),
+                                          imgSize: [90, 90]
+                                      }),
+                                  });
+                            }
+                        } else{
+                            fea = features;
+                        }
+                        if(fea){
+                            var extData = fea.get("extData");
+                            if(extData.gpsState == 1){ //离线
+                                var img = "views/key_vehicle/img/select_pic_map_car_lixian.png";
+                            } else{
+                                var img = "views/key_vehicle/img/select_pic_map_car_zaixian.png";
+                            }
+                            callback(extData);
+                            return new ol.style.Style({
+                                image: new ol.style.Icon({
+    //                              rotation: fea.get('rotation') || 0,
+                                    src: img
+    //                              anchor: fea.get('anchor')
+                                }),
+                                text:self.createTextStyle(extData.hphm)
+                            });
+                        }
                     }
             });
 
@@ -1068,8 +1075,8 @@
         
         //添加车辆号牌提示
         createTextStyle: function(carno){
-        	var self = this;
-        	var align = "center";  //center 'left', 'right', 'center', 'end' or 'start'. Default is 'start'.
+            var self = this;
+            var align = "center";  //center 'left', 'right', 'center', 'end' or 'start'. Default is 'start'.
            var baseline = "hanging";  // middle 'bottom', 'top', 'middle', 'alphabetic', 'hanging', 'ideographic'. Default is 'alphabetic'.
            var size = "12px";  
            var offsetX = 0;  
@@ -1146,42 +1153,42 @@
         
          //选中某车辆
         locateCar: function(layerSelect, layerName, plateName,callback) {
-        	console.log(layerName);
-        	var czoom = this._map.getView().getZoom();
-			var selectedFeatures = layerSelect.getFeatures();
-			var layer = this.getLayer(layerName);
-			var features = layer.getSource().getFeatures();
-			if(features) {
-				selectedFeatures.clear();
-				var feature;
-				var hasResult = true;
-				for(var i = 0; i < features.length; i++) {
-					if(layerName=="carMarkerLayer"){
-						feature = features[i];
-					} else{
-						var currentFeature = features[i];
-						var subFeatures = currentFeature.get('features');
-						if(subFeatures.length == 1){
-							feature = subFeatures[0];
-						}
-					}
-					
-					var hphm = feature.get("extData").hphm;
-					if(hphm == plateName) {
-						selectedFeatures.push(feature);
-						hasResult = false;
-						break;
-					}
-				}
-				if(hasResult){
-					callback();
-				} else{
-					this._map.getView().fit(feature.getGeometry());
-					this._map.getView().setZoom(czoom);
-				}
-			}
-		},
-      	//选中某道路
+            console.log(layerName);
+            var czoom = this._map.getView().getZoom();
+            var selectedFeatures = layerSelect.getFeatures();
+            var layer = this.getLayer(layerName);
+            var features = layer.getSource().getFeatures();
+            if(features) {
+                selectedFeatures.clear();
+                var feature;
+                var hasResult = true;
+                for(var i = 0; i < features.length; i++) {
+                    if(layerName=="carMarkerLayer"){
+                        feature = features[i];
+                    } else{
+                        var currentFeature = features[i];
+                        var subFeatures = currentFeature.get('features');
+                        if(subFeatures.length == 1){
+                            feature = subFeatures[0];
+                        }
+                    }
+                    
+                    var hphm = feature.get("extData").hphm;
+                    if(hphm == plateName) {
+                        selectedFeatures.push(feature);
+                        hasResult = false;
+                        break;
+                    }
+                }
+                if(hasResult){
+                    callback();
+                } else{
+                    this._map.getView().fit(feature.getGeometry());
+                    this._map.getView().setZoom(czoom);
+                }
+            }
+        },
+        //选中某道路
         locateRoad: function (adminLayerSelect,tempRoadlayer) {
             var selectedFeatures = adminLayerSelect.getFeatures();
             var roadFeature = this.roadFeatures;
