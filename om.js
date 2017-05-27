@@ -1,5 +1,4 @@
 ﻿// framework based on openlayers Version v4.0.1 with jQuery
-//  by lucien and zouh
 (function (root, factory) {
     if (typeof exports === "object") {
         module.exports = factory();
@@ -46,13 +45,6 @@
     };
     OpenMap.prototype = {
         constructor: OpenMap,
-        initParam: {
-            projection: new ol.proj.Projection({
-                code: 'EPSG:4490',
-                units: 'degrees',
-            }),
-            center: [121.84059516385024, 29.902349218390047]//如不指定，则默认北仑区政府
-        },
         /**
          * 初始化图层组layer
          */
@@ -276,11 +268,12 @@
                 console.error('地图容器的id为空或找不到id = ' + id + '的DOM元素');
                 return;
             }
-            var self = this;
+            var self = this,param;
             if (options) {
-                $.extend(self.initParam, options); //地图初始化参数
+                param = $.extend({}, window.omOptions, options); //地图初始化参数
+            }else{
+                param = window.omOptions;
             }
-            var initParam = self.initParam;
             self._map = new ol.Map({
                 controls: ol.control.defaults({
                     attribution: false
@@ -288,15 +281,15 @@
                 target: ele,
                 loadTilesWhileAnimating: true,
                 view: new ol.View({
-                    center: initParam.center,
-                    zoom: initParam.zoom || 10,
-                    minZoom: initParam.minZoom || 12,
-                    maxZoom: initParam.maxZoom || 19,
-                    projection: initParam.projection,
-                    extent: initParam.extent || undefined
+                    center: param.center,
+                    zoom: param.zoom || 10,
+                    minZoom: param.minZoom || 12,
+                    maxZoom: param.maxZoom || 19,
+                    projection: param.projection,
+                    extent: param.extent || undefined
                 }),
-                layers: initParam.layers || [],
-                extent: initParam.bounds || [121.64747112300006, 29.702835634000053, 122.1792500360001, 30.002109405000056]
+                layers: param.layers || [],
+                extent: param.bounds || [121.64747112300006, 29.702835634000053, 122.1792500360001, 30.002109405000056]
             });
             //保存所有的layer
             self._layer = {};
