@@ -766,7 +766,7 @@
             var self = this;
             //wfs回调方法
             window[callbackName] = function (res) {
-                var myprojection = self.initParam.projection;
+                var myprojection = self.getProjection();
                 var format = new ol.format.GeoJSON();
                 self.roadFeatures = format.readFeatures(res, { featureProjection: myprojection });
                 self.getLayer('roadLayer').getSource().addFeatures(self.roadFeatures);
@@ -888,7 +888,7 @@
                 });
             };
 
-            var myprojection = this.initParam.projection;
+            var myprojection = this.getProjection();
             // 构建图层
             var adminWfsLayer = new ol.layer.Vector({
                 source: wfcVectorSource,
