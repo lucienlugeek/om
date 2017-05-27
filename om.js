@@ -828,9 +828,23 @@
             var colorValue = 10;
             var createPolygonStyleFunction = function () {
                 return function (feature, resolution) {
-                    var text = resolution < 000005364418029785156 ? feature.get('FNAME') : '';
+                	var mapZoom = self._map.getView().getZoom();
+                	var name =resolution < 000005364418029785156 ? feature.get('FNAME') : '';
+                    var text = mapZoom + name;                    
                     if (!highlightStyleCache[text]) {
-                        highlightStyleCache[text] = new ol.style.Style({
+                    	var style =new ol.style.Style({
+                        fill: new ol.style.Fill({
+                            color: "rgba(255, 255, 255, 1)" 
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: "rgba(255, 255, 255, 1)",   
+                            width: 0
+                        }),
+                        text: createTextStyle(feature, resolution)
+                    });                    
+                    var fscale = parseInt(feature.get('FSCALE'));
+                    if(mapZoom >=fscale){
+                    	style = new ol.style.Style({
                             fill: new ol.style.Fill({
                                 color: "rgba(255, 255, 255, 1)" //getAreaColor("",0,100,colorValue ) //****.parkFillColor   rgba(255, 255, 255, 1)
                             }),
@@ -840,8 +854,10 @@
                             }),
                             text: createTextStyle(feature, resolution)
                         });
+                    } 
+                    highlightStyleCache[text] =style;
                     }
-                    return [highlightStyleCache[text]];//[style];  
+                    return [highlightStyleCache[text]];
                 }
             };
 
@@ -879,7 +895,7 @@
                     textAlign: align,
                     textBaseline: baseline,
                     font: font,
-                    text: getText(feature, resolution),
+                    //text: getText(feature, resolution),
                     fill: new ol.style.Fill({ color: fillColor }),
                     stroke: new ol.style.Stroke({ color: outlineColor, width: outlineWidth }),
                     offsetX: offsetX,
