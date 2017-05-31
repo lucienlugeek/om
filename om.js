@@ -146,6 +146,7 @@
                 source: new ol.source.Vector({
                     features: features
                 }),
+				gradient: options && options.gradient || ['#00f', '#0ff', '#0f0', '#ff0', '#f00'],
                 blur: options && options.blur || 30,
                 radius: options && options.radius || 30
             });
