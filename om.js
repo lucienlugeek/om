@@ -1146,8 +1146,7 @@
                     /*  var hdms = ol.coordinate.toStringHDMS(ol.proj.transform(
                              coordinate, 'EPSG:4490', 'EPSG:4490'));  */
                     overlay.setPosition(coordinate);
-                    content.innerHTML = '<p>You clicked here:</p><code>' + ' 路名称: ' + evt.selected[0].get("FNAME") + '\n' + ' FEATUREGUI' + evt.selected[0].get("FEATUREGUI")   //feature.get("name")
-                    '</code>';
+                    content.innerHTML = '<p>You clicked here:</p><code>' + ' 路名称: ' + evt.selected[0].get("FNAME") + '\n' + '</code>';//feature.get("name")
                     container.style.display = 'block';
                     title.innerHTML = "提示信息";
                     title.style.display = 'block';
