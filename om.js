@@ -5,9 +5,9 @@
     } else if (typeof define === 'function' && define.amd) {
         define(['ol'], factory);
     } else {
-        root.OpenMap = factory(root.ol,root.Highcharts);
+        root.OpenMap = factory(root.ol);
     }
-}(this, function (ol,hc) {
+}(this, function (ol) {
     var OpenMap = this.OpenMap = function () {
         if (arguments.length) {
             this.init.apply(this, arguments);
@@ -18,6 +18,15 @@
      */
     OpenMap.is = function (arg1, arg2) {
         return Object.prototype.toString.call((arg1)) === '[object ' + arg2 + ']';
+    };
+    OpenMap.wkt2Feature = function(wktStr,source, destination){
+    	var format = new ol.format.WKT();
+        var feature = format.readFeature(wktStr);
+        if(source && destination){
+        	//feature.getGeometry().transform('EPSG:4326', 'EPSG:4326');
+        	feature.getGeometry().transform(source, destination);
+        }
+        return feature;        
     };
     /**
     * @desc 计算半径的长度(单位米)
@@ -61,6 +70,7 @@
                         source: new ol.source.ImageWMS({
                             ratio: 1,
                             url: options.mapUrl,
+                            crossOrigin: 'anonymous',
                             params: {
                                 'FORMAT': options.format || 'image/png',
                                 'VERSION': options.version || '1.1.0',
@@ -85,6 +95,7 @@
                 source: new ol.source.ImageWMS({
                     ratio: 1,
                     url: options.mapUrl,
+                    crossOrigin: 'anonymous',
                     params: {
                         'FORMAT': options.format || 'image/png',
                         'VERSION': options.version || '1.1.0',
@@ -110,6 +121,7 @@
                 source:
                 new ol.source.TileWMS({
                     url: options.mapUrl,
+                    crossOrigin: 'anonymous',
                     params: {
                         'FORMAT': options.format || 'image/png',
                         'VERSION': options.version || '1.1.0',
@@ -605,6 +617,280 @@
             }
         },
         /**
+         * 增加饼状图
+         */
+		addChartOverlay:function(option){
+        	if (typeof option === 'undefined'
+                || typeof option.data === 'undefined'
+                || typeof option.domid === 'undefined') {
+                console.error('必须指定chart数据信息！');
+                return;
+            }
+        	 var self = this;
+        	 for(var i=0;i<option.data.length;i++){  
+                 var data = option.data[i];  
+                 var pt = [data.lon, data.lat];  
+                 var domid = option.domid +i;   //option.domid为map页面中增加overlay的div
+                 $("#" + option.domid).append("<div id='"+domid+"'></div>");  
+                 //positioning:Possible values are 'bottom-left', 'bottom-center', 'bottom-right', 'center-left', 'center-center', 'center-right', 'top-left', 'top-center', and 'top-right'. 
+                 //Default is 'top-left'.
+                 var chart = new ol.Overlay({  
+                     position: pt,  
+                     positioning: 'center-left',
+                     element: document.getElementById(domid)  
+                 });  
+                 self._map.addOverlay(chart);
+                 self.addChart(domid,data,100);                     
+             }
+        	 $("#" + option.domid).css("display","block");
+        },
+        /**
+         * 添加饼状图
+         */
+        addChart:function(domid,data,size){
+        	$('#'+domid).highcharts({  
+     	         chart: {  
+     	             backgroundColor: 'rgba(255, 255, 255, 0)',  
+     	             plotBorderColor: null,  
+     	             plotBackgroundColor: null,  
+     	             plotBackgroundImage: null,  
+     	             plotBorderWidth: null,  
+     	             plotShadow: false,  
+     	             width: size,  
+     	             height: size  
+     	         },  
+     	         tooltip: {  
+     	            pointFormat: '{series.name}:<b>{point.percentage:.1f}%</b>'  
+     	         },  
+     	         credits:{  
+     	             enabled:false  
+     	         }, 
+     	       	legend: {
+     	            align: 'right',
+     	            verticalAlign: 'top',
+     	            x: 0,
+     	            y: 100
+     	        },
+     	         title: {  
+     	             text: ''  
+     	         },  
+     	         plotOptions:{  
+     	             pie: { 
+     	            	   allowPointSelect: true,
+                          cursor: 'pointer',
+     	              	   dataLabels: {  
+     	                   enabled: false,
+     	                   color: '#000000',  
+                          connectorColor: '#000000',
+                           formatter: function() {  
+                              return '<b>'+ this.point.name +'</b>: '+ this.percentage +' %';  
+                          }   
+     	                 }  
+     	             }  
+     	         },  
+     	         series: [{  
+     	             type: 'pie',  //pie
+     	             name: data.name,  
+     	             data: data.data  
+     	         }]  
+     	     });
+        },
+        /**
+         * 删除Overlay：id 中包含参数domid的所有overlay
+         */
+        removeOverlayByIndexOfId:function(domid){
+        	var self = this;
+        	var overlayArr = this._map.getOverlays().getArray();
+        	for(var i=overlayArr.length-1;i>=0;i--){
+        		var ilid = overlayArr[i].getElement().id;
+        		if(ilid.indexOf(domid)!=-1){
+        			self._map.removeOverlay(overlayArr[i]);
+        		}
+        	}
+        },
+        /**
+         * 增加柱状图
+         */
+		addBarGraphOverlay:function(option){
+        	if (typeof option === 'undefined'
+                || typeof option.data === 'undefined'
+                || typeof option.domid === 'undefined') {
+                console.error('必须指定chart数据信息！');
+                return;
+            }
+        	 var self = this;
+        	 for(var i=0;i<option.data.length;i++){  
+                 var data = option.data[i];  
+                 var pt = [data.lon,data.lat];  
+                 var domid = option.domid +i;   //option.domid为map页面中增加overlay的div
+                 $("#" + option.domid).append("<div id='"+domid+"'></div>");  
+                 var chart = new ol.Overlay({  
+                     position: pt,  
+                     positioning: 'center-left',
+                     element: document.getElementById(domid)  
+                 });  
+                 self._map.addOverlay(chart);
+                 self.addBarGraph(domid,data,option.height,option.width,option.categories,option.unit,option.ytitle,option.color);                     
+             }
+        	 $("#" + option.domid).css("display","block");
+		},
+		/**
+         * 添加柱状图
+         */
+		addBarGraph:function(domid,data,height,width,categories,unit,ytitle,color){
+			 $('#'+domid).highcharts({  
+	  	         chart: {  
+	  	             backgroundColor: 'rgba(255, 255, 255, 0)',  
+	  	             plotBorderColor: null,  
+	  	             plotBackgroundColor: null,  
+	  	             plotBackgroundImage: null,  
+	  	             plotBorderWidth: null,  
+	  	             plotShadow: false,  
+	  	             width: width || 100,  
+	  	             height: height || 100
+	  	         },
+	  	        xAxis: { //x轴 
+	  	            categories: categories, //['柑橘', '香蕉','苹果', '梨子'],  //X轴类别 
+	  	            labels:{y:18},  //x轴标签位置：距X轴下方18像素 
+	  	            visible:false
+	  	        }, 
+	  	        yAxis: {  //y轴 
+	  	            title: {text:ytitle }, //y轴标题  '消费量（万吨）'
+	  	            lineWidth: 2, //基线宽度 
+	  	            visible:false
+	  	        }, 
+	  	         tooltip: {  
+	  	             //pointFormat: '' + this.x + ': ' + this.y + '万吨' //'<b>{point.percentage:.1f}%</b>'  
+	  	            formatter: function () {
+	                 return '<b>' + this.x +
+	                     '</b>:<b>' + this.y + unit + '</b>';
+	             	}
+	  	         },  
+	  	         credits:{  
+	  	             enabled:false  
+	  	         },  
+	  	         title: {  
+	  	             text: ''  
+	  	         },  
+	  	         plotOptions:{
+	  	             /*pie: {  
+	  	                 dataLabels: {  
+	  	                     enabled: true  
+	  	                 }  
+	  	             },*/   
+		  	       	series: {
+		  	            allowPointSelect: true
+		  	        }
+	  	         },  
+	  	         series: [{
+	  	        	 color:color,//'#e6c727',
+	  	             type: 'column',  //pie
+	  	             name: data.name,  
+	  	             data: data.data  
+	  	         }]  
+	  	     }); 	
+        },
+        /**
+         * 增加3d柱状图,需要引用3d.js包
+         */
+		add3dBarGraphOverlay:function(option){
+        	if (typeof option === 'undefined'
+                || typeof option.data === 'undefined'
+                || typeof option.domid === 'undefined') {
+                console.error('必须指定chart数据信息！');
+                return;
+            }
+        	 var self = this;
+        	 for(var i=0;i<option.data.length;i++){  
+                 var data = option.data[i];  
+                 var pt = [data.lon,data.lat];  
+                 var domid = option.domid +i;   //option.domid为map页面中增加overlay的div
+                 $("#" + option.domid).append("<div id='"+domid+"'></div>");  
+                 var chart = new ol.Overlay({  
+                     position: pt,  
+                     positioning: 'center-left',
+                     element: document.getElementById(domid)  
+                 });  
+                 self._map.addOverlay(chart);
+                 self.add3dBarGraph(domid,data,option.height,option.width,option.categories,option.unit,option.ytitle,option.color);                     
+             }
+        	 $("#" + option.domid).css("display","block");
+		},
+		/**
+         * 添加3d柱状图
+         */
+		add3dBarGraph:function(domid,data,height,width,categories,unit,ytitle,color){
+			 $('#'+domid).highcharts({  
+	  	         chart: {  
+	  	             backgroundColor: 'rgba(255, 255, 255, 0)',  
+	  	             plotBorderColor: null,  
+	  	             plotBackgroundColor: null,  
+	  	             plotBackgroundImage: null,  
+	  	             plotBorderWidth: null,  
+	  	             plotShadow: false,  
+	  	             width: width || 100,  
+	  	             height: height || 100,
+		  	         options3d: {
+		  	                enabled: true,
+		  	                alpha: 15,
+		  	                beta: 15,
+		  	                depth:50
+		  	            }
+	  	         },
+	  	        xAxis: { //x轴 
+	  	            categories: categories, //['柑橘', '香蕉','苹果', '梨子'],  //X轴类别 
+	  	            //labels:{y:18},  //x轴标签位置：距X轴下方18像素 
+	  	            visible:false
+	  	        }, 
+	  	        yAxis: {  //y轴 
+	  	            title: {text:ytitle }, //y轴标题  '消费量（万吨）'
+	  	            lineWidth: 2, //基线宽度 
+	  	            visible:false
+	  	        },		  	    
+	  	         tooltip: {  
+	  	             //pointFormat: '' + this.x + ': ' + this.y + '万吨' //'<b>{point.percentage:.1f}%</b>'  
+	  	            formatter: function () {
+	                 return '<b>' + this.x +
+	                     '</b>:<b>' + this.y + unit + '</b>';
+	             	}
+	  	         },  
+	  	         credits:{  
+	  	             enabled:false  
+	  	         },  
+	  	         title: {  
+	  	             text: ''  
+	  	         },  
+	  	         plotOptions:{ 
+	  	        	column: {
+	  	                dataLabels: {
+	  	                    format: '{y}' + unit,
+	  	                    enabled: true,          // 开启数据标签
+	  	                    color:'white',
+	  	                    y:-25,
+	  	                    x:0,
+	  	                },
+	  	                depth: 50,
+	  	                enableMouseTracking: false // 关闭鼠标跟踪，对应的提示框、点击事件会失效
+	  	            },
+	  	            /*pie: {  
+	  	                 dataLabels: {  
+	  	                     enabled: true  
+	  	                 }  
+	  	             }, */  
+		  	       	series: {
+		  	            allowPointSelect: true
+		  	        }
+	  	         },  
+	  	         series: [{  
+	  	        	 color:color,//'#e6c727',设置柱状体颜色效果
+	  	             edgeWidth:1,
+	  	             type: 'column',  //pie
+	  	             name: data.name,  
+	  	             data: data.data  
+	  	         }]  
+	  	     }); 	
+        },
+        /**
          * @desc 移除marker
          */
         removeMarker: function (m) {
@@ -616,6 +902,170 @@
             var self = this;
             self.getLayer(layerName).getSource().removeFeature(m);
         },
+        /**
+         * 增加动画效果Overlay
+         */
+		addAnimationOverlay:function(option){
+        	if (typeof option === 'undefined'
+                || typeof option.data === 'undefined'
+                || typeof option.domid === 'undefined') {
+                console.error('必须指定animation数据信息！');
+                return;
+            }
+        	 var self = this;
+        	 for(var i=0;i<option.data.length;i++){  
+                 var data = option.data[i];  
+                 var pt = [data.lon,data.lat];  
+                 var domid = option.domid +i;   //option.domid为map页面中增加overlay的div
+                 $("#" + option.domid).append("<div id='"+domid+"' class='animateIcon scaled'>"+data.data+"</div>");  
+                 var chart = new ol.Overlay({  
+                     position: pt,  
+                     positioning: option.positioning || 'center-center',
+                     element: document.getElementById(domid)  
+                 });  
+                 self._map.addOverlay(chart);
+                 
+                 //希望动画持续的时间与data数值有关。
+                 $('#'+domid).css({
+                     'animation-delay':i*0.2+'s'
+                     /*'height':parseInt(data.data) + 'px',
+                     'width':parseInt(data.data) + 'px'*/                     
+                 })                     
+             }
+        	 $("#" + option.domid).css("display","block");
+		},
+        /**
+         * 增加图片Overlay
+         */
+		addImageOverlay:function(option){
+        	if (typeof option === 'undefined'
+                || typeof option.data === 'undefined'
+                || typeof option.domid === 'undefined') {
+                console.error('必须指定image数据信息！');
+                return;
+            }
+        	 var self = this;
+        	 for(var i=0;i<option.data.length;i++){  
+                 var data = option.data[i];  
+                 var pt = [data.lon,data.lat];
+                 var img;
+                 if(option.imageheight && option.imagewidth){
+                	 img = new Image(option.imageheight,option.imagewidth);
+                 }else{
+                	 img = new Image();//69,52 设置大小会自动缩放图片，不设置则根据实际大小显示 
+                 }
+                 img.src = data.src;
+                 img.style.border=option.border || "0px solid #058a8f";
+                 
+                 var domid = option.domid +i;   //option.domid为map页面中增加overlay的div
+                 var chart = new ol.Overlay({
+                	 id:domid,
+                     position: pt,  
+                     positioning: option.positioning || 'center-center', //'center-left',
+                     offset: option.offset || [0,0], //[50,-30]
+                     element: img,
+                     autoPan:true
+                 });  
+                 self._map.addOverlay(chart);                                      
+             }
+        	 $("#" + option.domid).css("display","block");
+		},
+		/**
+		 * 导出图片,需要引用FileSaver.min.js
+		 */
+		exportPicture:function(){
+			var self = this;
+			self._map.once('postcompose', function(event) {
+		          var canvas = event.context.canvas;
+		          if (navigator.msSaveBlob) {
+		            navigator.msSaveBlob(canvas.msToBlob(), 'map.png');
+		          } else {
+		            canvas.toBlob(function(blob) {
+		              saveAs(blob, 'map.png');
+		            });
+		          }
+		        });
+			self._map.renderSync();
+		},
+		exportPdf:function(source,buttonId,format,resolution){
+		 var self = this;
+		 var map =self._map;
+		 /*<select id="format">
+	        <option value="a0">A0 (slow)</option>
+	        <option value="a1">A1</option>
+	        <option value="a2">A2</option>
+	        <option value="a3">A3</option>
+	        <option value="a4" selected>A4</option>
+	        <option value="a5">A5 (fast)</option>
+	      </select>
+	      <label>Resolution </label>
+	      <select id="resolution">
+	        <option value="72">72 dpi (fast)</option>
+	        <option value="150">150 dpi</option>
+	        <option value="300">300 dpi (slow)</option>
+	      </select>*/	      
+		 var dims = {
+			        a0: [1189, 841],
+			        a1: [841, 594],
+			        a2: [594, 420],
+			        a3: [420, 297],
+			        a4: [297, 210],
+			        a5: [210, 148]
+			      };
+
+		 var loading = 0;
+	     var loaded = 0;
+	     var exportButton = document.getElementById(buttonId);
+	     exportButton.disabled = true;
+	     document.body.style.cursor = 'progress';
+
+	      //var format = document.getElementById('format').value;
+	      //var resolution = document.getElementById('resolution').value;
+	      var dim = dims[format];
+	      var width = Math.round(dim[0] * resolution / 25.4);
+	      var height = Math.round(dim[1] * resolution / 25.4);
+	      var size = /** @type {ol.Size} */ (map.getSize());
+	      var extent = map.getView().calculateExtent(size);
+
+	        //var source = baseMap.getSource();
+	        var tileLoadStart = function() {
+	          ++loading;
+	        };
+
+	        var tileLoadEnd = function() {
+	          ++loaded;
+	          if (loading === loaded) {
+	            var canvas = this;
+	            window.setTimeout(function() {
+	              loading = 0;
+	              loaded = 0;
+	              var data = canvas.toDataURL('image/png');
+	              var pdf = new jsPDF('landscape', undefined, format);
+	              pdf.addImage(data, 'JPEG', 0, 0, dim[0], dim[1]);
+	              pdf.save('map.pdf');
+	              source.un('tileloadstart', tileLoadStart);
+	              source.un('tileloadend', tileLoadEnd, canvas);
+	              source.un('tileloaderror', tileLoadEnd, canvas);
+	              map.setSize(size);
+	              map.getView().fit(extent,size);
+	              map.renderSync();
+	              exportButton.disabled = false;
+	              document.body.style.cursor = 'auto';
+	            }, 100);
+	          }
+	        };        
+	        
+	        map.once('postcompose', function(event) {
+	          source.on('tileloadstart', tileLoadStart);
+	          source.on('tileloadend', tileLoadEnd, event.context.canvas);
+	          source.on('tileloaderror', tileLoadEnd, event.context.canvas);
+	        });
+	        
+	        map.setSize([width, height]);	       
+	        map.getView().fit(extent,map.getSize());
+	        map.renderSync();
+		},
+		
         /**
          * @desc 移除指定layer，从而移除依载该layer的所有marker
          * @param arg
