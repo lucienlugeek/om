@@ -19,6 +19,12 @@
     OpenMap.is = function (arg1, arg2) {
         return Object.prototype.toString.call((arg1)) === '[object ' + arg2 + ']';
     };
+    /**
+     * @desc 将wkt格式的字符串转换为Feature
+     * @param wktStr wkt格式的字符串
+     * @param source 源投影
+     * @param destination 目标投影
+     */
     OpenMap.wkt2Feature = function(wktStr,source, destination){
     	var format = new ol.format.WKT();
         var feature = format.readFeature(wktStr);
@@ -27,6 +33,156 @@
         	feature.getGeometry().transform(source, destination);
         }
         return feature;        
+    };
+    /**
+     * @desc 将openlayers 的geometry 转换为 jsts 对应的Geometry
+     * @param geometry openlayers对应的geometry 
+     */
+    OpenMap.olGeometry2JstsGeometry = function(geometry){
+    	//convert the OpenLayers geometry to a JSTS geometry
+    	var parser = new jsts.io.OL3Parser();    	
+        return parser.read(geometry);        
+    };
+    /**
+     * @desc 将openlayers 的geometry 转换为 jsts 对应的Geometry
+     * @param geometry openlayers对应的geometry 
+     */
+    OpenMap.JstsGeometry2olGeometry = function(jtstGeometry){
+    	//convert the JSTS geometry to a OpenLayers geometry
+    	var parser = new jsts.io.OL3Parser();    	
+        return parser.write(jtstGeometry);        
+    };
+    /**
+     * @desc geometry对象的buffer运算(缓冲区分析)
+     * @param parser jsts.io.OL3Parser()
+     * @param geometry ol geometry
+     * @param distance 距离
+     * @return 返回包含所有的点在一个指定距离内的多边形和多多边形
+     */
+    OpenMap.buffer = function(parser,geometry,distance){    	
+    	//var parser = new jsts.io.OL3Parser();
+    	var jstsGeom =parser.read(geometry);
+    	var bufferGeo = jstsGeom.buffer(distance);  
+        return parser.write(bufferGeo);      
+    };
+    /**
+     * @desc geometry对象的convexHull运算(凸壳分析)
+     * @param parser jsts.io.OL3Parser()
+     * @param geometry ol geometry
+     * @return 返回包含几何形体的所有点的最小凸壳多边形（外包多边形） 
+     */
+    OpenMap.convexHull = function(parser,geometry){    	
+    	//var parser = new jsts.io.OL3Parser();
+    	var jstsGeom =parser.read(geometry);
+    	var geo = jstsGeom.convexHull();  
+        return parser.write(geo);      
+    };
+    /**
+     * @desc geometry对象的intersection运算(交叉分析)
+     * @param parser jsts.io.OL3Parser()
+     * @param geometry1 ol geometry
+     * @param geometry2 ol geometry
+     * @return 返回两个同维度几何对象的交集
+     */
+    OpenMap.intersection = function(parser,geometry1,geometry2){    	
+    	var geo = parser.read(geometry1).intersection(parser.read(geometry2));  
+        return parser.write(geo);      
+    };
+    /**
+     * @desc geometry对象的union运算(联合分析)
+     * @param parser jsts.io.OL3Parser()
+     * @param geometry1 ol geometry
+     * @param geometry2 ol geometry
+     * @return 返回两个同维度几何对象的并集
+     */
+    OpenMap.union = function(parser,geometry1,geometry2){    	
+    	var geo = parser.read(geometry1).union(parser.read(geometry2));  
+        return parser.write(geo);      
+    };
+    /**
+     * @desc geometry对象的difference运算(差异分析)
+     * @param parser jsts.io.OL3Parser()
+     * @param geometry1 ol geometry
+     * @param geometry2 ol geometry
+     * @return 返回两个几何对象的差集
+     */
+    OpenMap.difference = function(parser,geometry1,geometry2){    	
+    	var geo = parser.read(geometry1).difference(parser.read(geometry2));  
+        return parser.write(geo);      
+    };
+    /**
+     * @desc geometry对象的symDifference运算(对称差异分析)
+     * @param parser jsts.io.OL3Parser()
+     * @param geometry1 ol geometry
+     * @param geometry2 ol geometry
+     * @return 返回两个几何图形的对称差分，即两个几何的并集部分减去两个几何的交集部分
+     */
+    OpenMap.symDifference = function(parser,geometry1,geometry2){    	
+    	var geo = parser.read(geometry1).symDifference(parser.read(geometry2));  
+        return parser.write(geo);      
+    };
+    /**
+     * @desc geometry对象的空间关系-交叉:crosses
+     * @param parser jsts.io.OL3Parser()
+     * @param geometry1 ol geometry
+     * @param geometry2 ol geometry
+     */
+    OpenMap.crosses = function(parser,geometry1,geometry2){    	
+        return parser.read(geometry1).crosses(parser.read(geometry2));      
+    };
+    /**
+     * @desc geometry对象的空间关系-相离:disjoint
+     * @param parser jsts.io.OL3Parser()
+     * @param geometry1 ol geometry
+     * @param geometry2 ol geometry
+     */
+    OpenMap.disjoint = function(parser,geometry1,geometry2){    	
+        return parser.read(geometry1).disjoint(parser.read(geometry2));      
+    };
+    /**
+     * @desc geometry对象的空间关系-相交:intersects
+     * @param parser jsts.io.OL3Parser()
+     * @param geometry1 ol geometry
+     * @param geometry2 ol geometry
+     */
+    OpenMap.intersects = function(parser,geometry1,geometry2){    	
+        return parser.read(geometry1).intersects(parser.read(geometry2));      
+    };
+    /**
+     * @desc geometry对象的空间关系-相接:touches
+     * @param parser jsts.io.OL3Parser()
+     * @param geometry1 ol geometry
+     * @param geometry2 ol geometry
+     */
+    OpenMap.touches = function(parser,geometry1,geometry2){    	
+        return parser.read(geometry1).touches(parser.read(geometry2));      
+    };
+    /**
+     * @desc geometry对象的空间关系-被包含:within
+     * @param parser jsts.io.OL3Parser()
+     * @param geometry1 ol geometry
+     * @param geometry2 ol geometry
+     */
+    OpenMap.within = function(parser,geometry1,geometry2){    	
+        return parser.read(geometry1).within(parser.read(geometry2));      
+    };
+    /**
+     * @desc geometry对象的空间关系-包含:contains
+     * @param parser jsts.io.OL3Parser()
+     * @param geometry1 ol geometry
+     * @param geometry2 ol geometry
+     */
+    OpenMap.contains = function(parser,geometry1,geometry2){
+        return parser.read(geometry1).contains(parser.read(geometry2));      
+    };
+    /**
+     * @desc geometry对象的空间关系-重叠:overlaps
+     * @param parser jsts.io.OL3Parser()
+     * @param geometry1 ol geometry
+     * @param geometry2 ol geometry
+     */
+    OpenMap.overlaps = function(parser,geometry1,geometry2){    	
+        return parser.read(geometry1).overlaps(parser.read(geometry2));      
     };
     /**
     * @desc 计算半径的长度(单位米)
@@ -987,6 +1143,9 @@
 		        });
 			self._map.renderSync();
 		},
+		/**
+		 * 导出pdf
+		 */
 		exportPdf:function(source,buttonId,format,resolution){
 		 var self = this;
 		 var map =self._map;
