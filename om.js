@@ -184,6 +184,33 @@
     OpenMap.overlaps = function(parser,geometry1,geometry2){    	
         return parser.read(geometry1).overlaps(parser.read(geometry2));      
     };
+    OpenMap.getExtentByData=function(data){
+    	var minx=180;
+		var miny=180;
+		var maxx =0.0;
+		var maxy =0.0;
+		var tmpx =0.0;	
+		var tmpy =0.0;	
+		var len =data.length;
+		for(var p=0;p<len;p++){
+			tmpx =parseFloat(data[p]['lon']);			
+			if(tmpx >=maxx){
+				maxx =tmpx;
+			}
+			if(tmpx <minx){
+				minx =tmpx;
+			}
+			
+			tmpy =parseFloat(data[p]['lat']);
+			if(tmpy >= maxy){
+				maxy = tmpy;
+			}
+			if(tmpy <= miny){
+				miny = tmpy;
+			}
+		}
+		return [minx,miny,maxx, maxy]; 
+    };
     /**
     * @desc 计算半径的长度(单位米)
     * @param OpenMap,Object
@@ -208,6 +235,27 @@
         dist = dist.toFixed(6);//单位是 米
         return dist;
     };
+    /**
+     * @desc 计算两点之间的距离(单位米)
+     * @param start,end
+     */
+     OpenMap.calcDistance = function (start,end) {
+         // create sphere to measure on
+         var wgs84sphere = new ol.Sphere(6378137); // one of WGS84 earth radius'
+         // get distance on sphere
+         var dist = wgs84sphere.haversineDistance(start, end);
+         dist = dist.toFixed(6);//单位是 米
+         return dist;
+     };
+     /**
+      * @desc 计算多边形面积(单位平方米)
+      * @param polygon
+      */
+     OpenMap.calcArea = function(polygon){    	 
+    	 var wgs84sphere = new ol.Sphere(6378137);
+    	 var coordinates = polygon.getLinearRing(0).getCoordinates();
+		 return Math.abs(wgs84sphere.geodesicArea(coordinates));
+     };
     OpenMap.prototype = {
         constructor: OpenMap,
         /**
@@ -453,12 +501,17 @@
                     center: param.center,
                     zoom: param.zoom || 10,
                     minZoom: param.minZoom || 12,
-                    maxZoom: param.maxZoom || 19,
+                    maxZoom: param.maxZoom || 20,
                     projection: param.projection,
                     extent: param.extent || undefined
                 }),
+                interactions: ol.interaction.defaults().extend([
+                                                                new ol.interaction.DragRotateAndZoom({
+                                                                	condition:ol.events.condition.shiftKeyOnly
+                                                                })
+                                                              ]),
                 layers: param.layers || [],
-                extent: param.bounds || [121.64747112300006, 29.702835634000053, 122.1792500360001, 30.002109405000056]
+                extent: param.extent || undefined //[121.64747112300006, 29.702835634000053, 122.1792500360001, 30.002109405000056]
             });
             //保存所有的layer
             self._layer = {};
@@ -466,9 +519,26 @@
             self._map.on('pointermove', function (evt) {
                 var jq = $(self._map.getTargetElement());
                 jq.css({
-                    cursor: self._map.hasFeatureAtPixel(evt.pixel) ? 'pointer' : ''
+                    cursor: self._map.hasFeatureAtPixel(evt.pixel) ? 'pointer' : 'default'
                 });
             });
+            
+            self._map.addControl(new ol.control.ScaleLine());
+            //添加组件 显示鼠标值
+            self._map.addControl(
+            	new ol.control.MousePosition({
+            	 className: 'custom-mouse-position',  
+                 target: document.getElementById('location') ,  
+                 coordinateFormat: ol.coordinate.createStringXY(6),//保留5位小数  
+                 undefinedHTML: ' '
+                	 }));            
+            self._map.addControl(new ol.control.ZoomSlider());
+            self._map.addControl(new ol.control.OverviewMap({
+            	layers: param.layers || [],
+            	view: new ol.View({
+                    projection: param.projection
+                }),
+            }));            
         },
         /**
          * @desc 获取map对象
@@ -738,6 +808,186 @@
             self.addLayer(la, _layer).setVisible(vi);
         },
         /**
+		 * 根据数据获取蜂巢图形要素
+		 */
+		getHoneycombGraphFeatures:function(option){			
+			if (!option || !option.layerName || !option.data) {
+                console.error('必须指定绘制蜂巢图信息！');
+                return;
+            }
+			var self =this;
+			var map =self._map;
+			var honeyCombLayer = self.getLayer(option.layerName);
+			//1.根据数据设置绘制蜂巢图的范围
+			var bounds = OpenMap.getExtentByData(option.data);
+			var tempHoneycombResult = option.data;
+			//2.重新设置地图中心点
+			var mapCenter = [(bounds[0]+ bounds[2])/2,(bounds[1]+ bounds[3])/2];
+			map.getView().setCenter(mapCenter);
+	    	
+			var features = [];
+	    	//var cnt =0;
+	    	
+	    	//3.绘制蜂巢图，绘制前先设置数据对应的中心点，然后以此点为中心点，以所有数据范围来画蜂巢图
+			setTimeout(function(){
+		    	var zoom= map.getView().getZoom();
+		    	var CurrentExtent = map.getView().calculateExtent(map.getSize());
+		    	
+		    	//honeyCombLayer.getSource().clear();
+		    	    	
+		    	var pixSize = 50;//(zoom - 8) * 4 ;//Math.pow(2,zoom - 10) * 5 ; //50;
+		    	var mapCenter =map.getView().getCenter();
+		    	//取实际地图数据范围大小像素
+		    	var minSize = map.getPixelFromCoordinate([bounds[0],bounds[1]]);
+		    	var maxSize = map.getPixelFromCoordinate([bounds[2],bounds[3]]);
+		    	
+		    	var size = [maxSize[0]-minSize[0],minSize[1]-maxSize[1]];
+		    	//console.info("size" + size[0]  + " " + size[1]);
+		    	//设置六边形每行的个数
+		    	var widthLen = Math.ceil((size[0]- Math.sqrt(3) * pixSize) /(2* Math.sqrt(3) *pixSize));
+		    	//设置六边形每列的个数
+		    	var heightLen= Math.ceil((size[1] -3/2 * pixSize)/(3* pixSize));
+		    	
+		    	//地图中心点对应的屏幕分辨率
+		    	var centerPixel = map.getPixelFromCoordinate([mapCenter[0],mapCenter[1]]);
+		    	var rowCenter;
+		    	var key;
+		    	var startTime =new Date().getTime();
+		    	console.info("honeyComb start time " + new Date().getTime());
+		    	//根据地图高度来设置行
+		    	for(var row= -heightLen;row<heightLen +1;row++) {
+		    		//根据地图中心点来设置蜂巢行中心点
+		    		//从地图中心往外发散的奇偶行来设置中心点位置
+		    		if(row%2==0){    			
+		    			rowCenter =[centerPixel[0],centerPixel[1]+row * 3/2 * pixSize];
+		    		}else{
+		    			rowCenter =[centerPixel[0] +Math.sqrt(3)/2 * pixSize,centerPixel[1]+row * 3/2 * pixSize];
+		    		} 
+		    	
+			    	for(var i= -widthLen;i<widthLen +1;i++) {	           
+			    		key ='honeycomb_' + (row + heightLen) + "_" + (i + widthLen);
+			    		var tempCenter =[rowCenter[0] +i * Math.sqrt(3) * pixSize,rowCenter[1]];
+			            
+			            var points=[];	        
+				         for(var j = 0; j < 6; j++){
+				             var angle = j*60 + 30;
+				             var coordinate =[tempCenter[0] + Math.cos(angle/ 180 * Math.PI) * (pixSize),tempCenter[1] - Math.sin(angle / 180 * Math.PI) * (pixSize)];
+				             points[j] = map.getCoordinateFromPixel(coordinate);
+				         }
+				         points[6]=points[0]; //闭合的多边形
+				         var polygon = new ol.geom.Polygon([points]);
+				         
+				         var count =0;
+				         for(var k=0;k<tempHoneycombResult.length;k++){
+				        	 if(!tempHoneycombResult[k]['isContains']){
+					        	 var coordinate = [parseFloat(tempHoneycombResult[k]['lon']), parseFloat(tempHoneycombResult[k]['lat'])];			        	  
+					             if(polygon.intersectsCoordinate(coordinate)){
+					        		 count+=parseInt(tempHoneycombResult[k]['count'])
+					            	 tempHoneycombResult[k]['isContains'] ="1";
+					        	 }
+				        	 } 
+				         }
+				        
+				         //根据多边形来计算传入的数据对应的count // 待补充
+				         if(count>0){
+			         		features.push(new ol.Feature({geometry:polygon,id:key,count:count}));				            	
+			         		/*features[cnt] = new ol.Feature({geometry:polygon,id:key,count:count});
+				            cnt++;*/
+				         }            
+			   	 	}			    	
+		    	}
+		    	console.info("features size " + features.length);
+		    	tempHoneycombResult =null;
+		        honeyCombLayer.getSource().addFeatures(features);
+		        var endTime = new Date().getTime() - startTime;
+		        console.info("honeyComb end time " + new Date().getTime());
+		        console.info("honeyComb total time " + endTime + "ms");
+		    	//return features;
+			},2000);
+		},
+		/**
+		 * 根据数据获取网格图形要素
+		 */
+		getGridFeatures:function(option){			
+			if (!option || !option.layerName || !option.data) {
+                console.error('必须指定绘制蜂巢图信息！');
+                return;
+            }
+			var self =this;
+			var map =self._map;
+			var gridLayer = self.getLayer(option.layerName);
+			cols = option.data.cols/2;
+			rows = option.data.rows/2;
+			center = option.data.center;
+			width = option.data.width;
+			var m=1,n=1;
+			var features = [];	
+			
+			var startTime =new Date().getTime();
+	    	console.info("grid start time " + new Date().getTime());
+	    	
+			map.getView().setCenter([center[0],center[1]]);
+			//通过pixel大小计算实际距离
+			var centerPixel = map.getPixelFromCoordinate([center[0],center[1]]);
+			var sourceProj = map.getView().getProjection();
+		    var newPixel =[centerPixel[0]-1,centerPixel[1]];
+		    var newPixelCoordinate =map.getCoordinateFromPixel(newPixel); 
+		    //计算一个pixel的实际距离
+		    var distance =OpenMap.calcDistance(center,newPixelCoordinate);		    
+		    var distancePixel = width/distance;
+		    newPixel=[centerPixel[0]-distancePixel,centerPixel[1]];
+		    newPixelCoordinate=map.getCoordinateFromPixel(newPixel);
+		    width = parseFloat(parseFloat(center[0] - newPixelCoordinate[0]).toFixed(10));
+			//中心点
+			features[0] = new ol.Feature({geometry:new ol.geom.Point([center[0],center[1]]),id:"center",factor:"0"});
+			features[0].setStyle(new ol.style.Style({  
+		        fill : new ol.style.Fill({  
+		            color : "rgba(255, 255, 255, 0.9)" 
+		        }),  
+		        stroke : new ol.style.Stroke({  
+		            color : "#319FD3",
+		            width : 1  
+		        }),
+		        image: new ol.style.Circle({
+		            radius: 4,
+		            fill: new ol.style.Fill({
+		                color: '#ffcc33'
+		            })
+		        })  
+		        })
+			);
+			var col_y =-cols;
+			for(var i=0;i<option.data.rows;i++){
+				//自动设置row_x 从-rows开始计算位置，col_y从cols开始，每循环一次col_y自减
+				var row_x =rows;		
+				for(var j=0;j<option.data.cols;j++){			
+					var start = [center[0]+col_y*width,center[1]+row_x*width];
+					var end = [center[0]+(col_y+1)*width,center[1]+(row_x-1)*width];
+					//输出列后，row_x自增
+					col_y++;
+					var id ="rect_"+m + "_" + n;
+					var rect = new ol.geom.Polygon([
+						   	                         [start, [start[0], end[1]], end, [end[0], start[1]], start]
+						   		                     ]);
+					rect.setProperties("id",id);
+					//通过feature属性来设置text
+					features.push(new ol.Feature({geometry:rect,id:id,factor:n}));
+					n++;
+				}
+				rows--;
+				col_y =-cols;
+				m++;
+				n=1;
+			}	
+			console.info("features size " + features.length);
+			gridLayer.getSource().clear();
+			gridLayer.getSource().addFeatures(features);
+			
+			var endTime = new Date().getTime() - startTime;
+	        console.info("grid end time " + new Date().getTime());
+	        console.info("grid total time " + endTime + "ms");
+		},
+        /**
          * @desc 添加覆盖元素
          */
         addOverLay: function (option) {
@@ -749,16 +999,22 @@
             var element = document.getElementById(option.eid);
             if (option.hide) {
                 element.style.display = 'none';
+            }else{
+            	element.style.display = 'block';
             }
+            
             var popup = new ol.Overlay({
                 id: option.id,
+                position:option.position,
                 element: element,
-                stopEvent: typeof option.stopEvent !== 'undefined' ? option.stopEvent : false,
+                stopEvent: typeof option.stopEvent !== 'undefined' ? option.stopEvent : true,
                 offset: option.offset || [0, 0],
                 positioning: option.positioning || 'center-center' //中心点位于容器的正中间
             });
-            popup.setPosition(option.position);
             self._map.addOverlay(popup);
+            
+            //非初始化状态下加载overlay的情况下，全部加载完毕记得用下面的语句刷新下
+            //self._map.renderSync();
         },
         /**
          * @desc 获取所有的覆盖元素
@@ -785,18 +1041,22 @@
         	 var self = this;
         	 for(var i=0;i<option.data.length;i++){  
                  var data = option.data[i];  
-                 var pt = [data.lon, data.lat];  
+                 var pt = [parseFloat(data.lon), parseFloat(data.lat)];  
                  var domid = option.domid +i;   //option.domid为map页面中增加overlay的div
                  $("#" + option.domid).append("<div id='"+domid+"'></div>");  
                  //positioning:Possible values are 'bottom-left', 'bottom-center', 'bottom-right', 'center-left', 'center-center', 'center-right', 'top-left', 'top-center', and 'top-right'. 
                  //Default is 'top-left'.
+                 self.addChart(domid,data,100);    
+                 
                  var chart = new ol.Overlay({  
                      position: pt,  
-                     positioning: 'center-left',
+                     positioning: 'center-center',
+                     offset: [0, 0],
+                     autoPan:true,
                      element: document.getElementById(domid)  
                  });  
                  self._map.addOverlay(chart);
-                 self.addChart(domid,data,100);                     
+                                  
              }
         	 $("#" + option.domid).css("display","block");
         },
@@ -816,10 +1076,13 @@
      	             height: size  
      	         },  
      	         tooltip: {  
-     	            pointFormat: '{series.name}:<b>{point.percentage:.1f}%</b>'  
+     	            //pointFormat: '{series.name}<b>{point.percentage:.1f}%</b>' 
+     	        	formatter: function() {  
+                        return this.series.name +'<br/>' +'<b>'+ this.point.name +'</b>: '+ parseInt(this.percentage) +' %';  
+                    }  
      	         },  
      	         credits:{  
-     	             enabled:false  
+     	             enabled:false
      	         }, 
      	       	legend: {
      	            align: 'right',
@@ -833,13 +1096,13 @@
      	         plotOptions:{  
      	             pie: { 
      	            	   allowPointSelect: true,
-                          cursor: 'pointer',
+                           cursor: 'pointer',
      	              	   dataLabels: {  
      	                   enabled: false,
      	                   color: '#000000',  
-                          connectorColor: '#000000',
+                           connectorColor: '#000000',
                            formatter: function() {  
-                              return '<b>'+ this.point.name +'</b>: '+ this.percentage +' %';  
+                              return this.series.name +'<b>'+ this.point.name +'</b>: '+ this.percentage +' %';  
                           }   
      	                 }  
      	             }  
@@ -1224,7 +1487,254 @@
 	        map.getView().fit(extent,map.getSize());
 	        map.renderSync();
 		},
-		
+		measure:function(measureType,layerName){
+			var self = this;
+			/**
+			 * Currently drawn feature.
+			 * @type {ol.Feature}
+			 */
+			//self.sketch =null;
+			/**
+			 * The help tooltip element.
+			 * @type {Element}
+			 */
+			//self.helpTooltipElement=null;
+			/**
+			 * Overlay to show the help messages.
+			 * @type {ol.Overlay}
+			 */
+			//self.helpTooltip=null;
+			/**
+			 * The measure tooltip element.
+			 * @type {Element}
+			 */
+			//self.measureTooltipElement=null;
+			/**
+			 * Overlay to show the measurement.
+			 * @type {ol.Overlay}
+			 */
+			//self.measureTooltip=null;
+			//self.measuredraw=null;// global so we can remove it later
+			if(self.measuredraw){
+				self._map.removeInteraction(self.measuredraw);
+			}
+			
+			/**
+			 * Message to show when the user is drawing a polygon.
+			 * @type {string}
+			 */
+			var continuePolygonMsg = 'Click to continue drawing the polygon';
+
+			/**
+			 * Message to show when the user is drawing a line.
+			 * @type {string}
+			 */
+			var continueLineMsg = 'Click to continue drawing the line';
+			var map = self._map;
+			
+			var measureLayer = self.getLayer(layerName);
+			if(null ==measureLayer) return;
+			/**
+			 * Handle pointer move.
+			 * @param {ol.MapBrowserEvent} evt The event.
+			 */			
+			var pointerMoveHandler = function(evt) {
+			  if (evt.dragging) {
+			    return;
+			  }
+			  /** @type {string} */
+			  var helpMsg = 'Click to start drawing';
+
+			  if (self.sketch) {
+			    var geom = (self.sketch.getGeometry());
+			    if (geom instanceof ol.geom.Polygon) {
+			      helpMsg = continuePolygonMsg;
+			    } else if (geom instanceof ol.geom.LineString) {
+			      helpMsg = continueLineMsg;
+			    }
+			  }
+
+			  self.helpTooltipElement.innerHTML = helpMsg;
+			  self.helpTooltip.setPosition(evt.coordinate);
+
+			  self.helpTooltipElement.classList.remove('hidden');
+			};
+			
+			/**
+			 * Format length output.
+			 * @param {ol.geom.LineString} line The line.
+			 * @return {string} The formatted length.
+			 */
+			var formatLength = function(line) {
+			  var length;
+			  if (true) {
+			    var coordinates = line.getCoordinates();
+			    length = 0;
+			    //var sourceProj = map.getView().getProjection();
+			    for (var i = 0, ii = coordinates.length - 1; i < ii; ++i) {
+			      /*var c1 = ol.proj.transform(coordinates[i], sourceProj, 'EPSG:4326');
+			      var c2 = ol.proj.transform(coordinates[i + 1], sourceProj, 'EPSG:4326');
+			      length += wgs84Sphere.haversineDistance(c1, c2);*/
+			      length += parseFloat(OpenMap.calcDistance(coordinates[i],coordinates[i + 1]));
+			    }
+			  } else {
+			    length = Math.round(line.getLength() * 100) / 100;
+			  }
+			  var output;
+			  if (length > 100) {
+			    output = (Math.round(length / 1000 * 100) / 100) +
+			        ' ' + 'km';
+			  } else {
+			    output = (Math.round(length * 100) / 100) +
+			        ' ' + 'm';
+			  }
+			  return output;
+			};
+
+
+			/**
+			 * Format area output.
+			 * @param {ol.geom.Polygon} polygon The polygon.
+			 * @return {string} Formatted area.
+			 */
+			var formatArea = function(polygon) {
+			  var area;
+			  if (true) {
+			    /*var sourceProj = map.getView().getProjection();
+			    var geom = *//** @type {ol.geom.Polygon} *//*(polygon.clone().transform(
+			        sourceProj, 'EPSG:4326'));
+			    var coordinates = geom.getLinearRing(0).getCoordinates();
+			    area = Math.abs(wgs84Sphere.geodesicArea(coordinates));*/
+			    area = parseFloat(OpenMap.calcArea(polygon));
+			  } else {
+			    area = polygon.getArea();
+			  }
+			  var output;
+			  if (area > 10000) {
+			    output = (Math.round(area / 1000000 * 100) / 100) +
+			        ' ' + 'km<sup>2</sup>';
+			  } else {
+			    output = (Math.round(area * 100) / 100) +
+			        ' ' + 'm<sup>2</sup>';
+			  }
+			  return output;
+			};
+			
+			map.on('pointermove', pointerMoveHandler);
+
+			map.getViewport().addEventListener('mouseout', function() {
+			  self.helpTooltipElement.classList.add('hidden');
+			});
+			  var type = (measureType == 'area' ? 'Polygon' : 'LineString');
+			  self.measuredraw = new ol.interaction.Draw({
+			    source: measureLayer.getSource(),
+			    type: /** @type {ol.geom.GeometryType} */ (type),
+			    style: new ol.style.Style({
+			      fill: new ol.style.Fill({
+			        color: 'rgba(255, 255, 255, 0.2)'
+			      }),
+			      stroke: new ol.style.Stroke({
+			        color: 'rgba(0, 0, 0, 0.5)',
+			        lineDash: [10, 10],
+			        width: 2
+			      }),
+			      image: new ol.style.Circle({
+			        radius: 5,
+			        stroke: new ol.style.Stroke({
+			          color: 'rgba(0, 0, 0, 0.7)'
+			        }),
+			        fill: new ol.style.Fill({
+			          color: 'rgba(255, 255, 255, 0.2)'
+			        })
+			      })
+			    })
+			  });
+			  map.addInteraction(self.measuredraw);
+
+			  self.createMeasureTooltip();
+			  self.createHelpTooltip();
+			  var listener;
+			  self.measuredraw.on('drawstart',
+			      function(evt) {
+			        // set sketch
+			        self.sketch = evt.feature;
+
+			        /** @type {ol.Coordinate|undefined} */
+			        var tooltipCoord = evt.coordinate;
+
+			        listener = self.sketch.getGeometry().on('change', function(evt) {
+			          var geom = evt.target;
+			          var output;
+			          if (geom instanceof ol.geom.Polygon) {
+			            output = formatArea(geom);
+			            tooltipCoord = geom.getInteriorPoint().getCoordinates();
+			          } else if (geom instanceof ol.geom.LineString) {
+			            output = formatLength(geom);
+			            tooltipCoord = geom.getLastCoordinate();
+			          }
+			          self.measureTooltipElement.innerHTML = output;
+			          self.measureTooltip.setPosition(tooltipCoord);
+			        });
+			      }, this);
+
+			  self.measuredraw.on('drawend',
+			      function() {
+			        self.measureTooltipElement.className = 'tooltip tooltip-static';
+			        self.measureTooltip.setOffset([0, -7]);
+			        // unset sketch
+			        self.sketch = null;
+			        // unset tooltip so that a new one can be created
+			        self.measureTooltipElement = null;
+			        self.createMeasureTooltip();
+			        ol.Observable.unByKey(listener);
+			        
+			       // Global_Map.un('pointermove', pointerMoveHandler);
+			      }, this);
+		},
+		createHelpTooltip:function(){
+			var self =this;
+			if (self.helpTooltipElement) {
+				self.helpTooltipElement.parentNode.removeChild(self.helpTooltipElement);
+			  }
+			self.helpTooltipElement = document.createElement('div');
+			self.helpTooltipElement.className = 'tooltip hidden';
+			self.helpTooltip = new ol.Overlay({
+				//id:"measure" +new Date().getTime(),
+			    element: self.helpTooltipElement,
+			    offset: [15, 0],
+			    positioning: 'center-left'
+			  });
+			  self._map.addOverlay(self.helpTooltip);
+		},
+		createMeasureTooltip:function(){
+		  var self =this;
+		  if (self.measureTooltipElement) {
+			  self.measureTooltipElement.parentNode.removeChild(self.measureTooltipElement);
+		  }
+		  self.measureTooltipElement = document.createElement('div');
+		  self.measureTooltipElement.className = 'tooltip tooltip-measure';
+		   
+		  self.measureTooltip = new ol.Overlay({
+			//id:"measure" +new Date().getTime(),
+		    element: self.measureTooltipElement,
+		    offset: [0, -15],
+		    positioning: 'bottom-center'
+		  });
+		  self._map.addOverlay(self.measureTooltip);
+		},
+		clearMeasure:function(layerName){
+			var self =this;
+			if(self.measuredraw){
+				self._map.removeInteraction(self.measuredraw);
+			}
+			//清除图形
+			var measureLayer = self.getLayer(layerName);
+			if(null ==measureLayer) return;
+			
+			measureLayer.getSource().clear();
+			 
+			$('div .tooltip').parent().remove();
+		},
         /**
          * @desc 移除指定layer，从而移除依载该layer的所有marker
          * @param arg
