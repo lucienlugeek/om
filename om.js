@@ -211,6 +211,33 @@
 		}
 		return [minx,miny,maxx, maxy]; 
     };
+    OpenMap.getExtentByCoordinates=function(data){
+    	var minx=180;
+		var miny=180;
+		var maxx =0.0;
+		var maxy =0.0;
+		var tmpx =0.0;	
+		var tmpy =0.0;	
+		var len =data.length;
+		for(var p=0;p<len;p++){
+			tmpx =parseFloat(data[p][0]);			
+			if(tmpx >=maxx){
+				maxx =tmpx;
+			}
+			if(tmpx <minx){
+				minx =tmpx;
+			}
+			
+			tmpy =parseFloat(data[p][1]);
+			if(tmpy >= maxy){
+				maxy = tmpy;
+			}
+			if(tmpy <= miny){
+				miny = tmpy;
+			}
+		}
+		return [minx,miny,maxx, maxy]; 
+    };
     /**
     * @desc 计算半径的长度(单位米)
     * @param OpenMap,Object
@@ -516,10 +543,10 @@
             //保存所有的layer
             self._layer = {};
             //鼠标在地图上移动到某个feature上的时候，更改cursor样式
-            self._map.on('pointermove', function (evt) {
+           self._map.on('pointermove', function (evt) {
                 var jq = $(self._map.getTargetElement());
                 jq.css({
-                    cursor: self._map.hasFeatureAtPixel(evt.pixel) ? 'pointer' : 'default'
+                    cursor: self._map.hasFeatureAtPixel(evt.pixel) ? 'pointer' : ''
                 });
             });
             
@@ -1769,6 +1796,50 @@
             }
         },
         /**
+         * 左移：移动距离为当前屏幕长度的1/6
+         */
+        moveLeft:function(){
+          var self = this;
+          var map = self.getMap();
+       	  var center =map.getView().getCenter();
+       	  var pixSize = map.getPixelFromCoordinate(center);
+       	  var newCenter =map.getCoordinateFromPixel([pixSize[0]-parseInt(pixSize[0]/3),pixSize[1]]);
+       	  map.getView().setCenter(newCenter);
+        },
+        /**
+         * 右移：移动距离为当前屏幕长度的1/6
+         */
+        moveRight:function(){
+          var self = this;
+          var map = self.getMap();
+       	  var center =map.getView().getCenter();
+       	  var pixSize = map.getPixelFromCoordinate(center);
+       	  var newCenter =map.getCoordinateFromPixel([pixSize[0]+parseInt(pixSize[0]/3),pixSize[1]]);
+       	  map.getView().setCenter(newCenter);
+        },
+        /**
+         * 上移：移动距离为当前屏幕宽度的1/6
+         */
+        moveUp:function(){
+          var self = this;
+          var map = self.getMap();
+       	  var center =map.getView().getCenter();
+       	  var pixSize = map.getPixelFromCoordinate(center);
+       	  var newCenter =map.getCoordinateFromPixel([pixSize[0],pixSize[1]+parseInt(pixSize[1]/3)]);
+       	  map.getView().setCenter(newCenter);
+        },
+        /**
+         * 下移：移动距离为当前屏幕宽度的1/6
+         */
+        moveDown:function(){
+          var self = this;
+          var map = self.getMap();
+       	  var center =map.getView().getCenter();
+       	  var pixSize = map.getPixelFromCoordinate(center);
+       	  var newCenter =map.getCoordinateFromPixel([pixSize[0],pixSize[1]-parseInt(pixSize[1]/3)]);
+       	  map.getView().setCenter(newCenter);
+        },
+        /**
          * @desc 添加layer的监听事件
          */
         addLayerListener: function (layer) {
@@ -1878,6 +1949,460 @@
                 this._map.removeInteraction(this._draw);
             }
         },
+        /**
+         * @desc 开启绘画功能
+         * @param type {Point|LineString|Box|Polygon|Circle} 点、线、矩形、多边形、圆
+         *        events : drawstart,drawend,change,propertychange
+         */
+        oDraw: function (layerName,type, events) {
+            if (typeof layerName === 'undefined') {
+                console.error('draw layer is error!');
+                return;
+            }
+            if (typeof type === 'undefined' || ['Point', 'LineString', 'Box', 'Polygon', 'Circle'].indexOf(type) === -1) {
+                console.error('draw type is error!');
+                return;
+            }
+            var self = this;
+            var map = self.getMap();
+            var layer = self.getLayer(layerName);
+            if(layer == null) return;           
+            self._draw = new ol.interaction.Draw({
+                source: layer.getSource(),
+                snapTolerance:15, //默认 12
+                type: /** @type {ol.geom.GeometryType} */ (type === "Box" ? "Circle" : type),
+                geometryFunction: type === "Box" ? ol.interaction.Draw.createBox() : undefined
+            });
+
+            self.setDoubleClickZoomState(false);
+            map.addInteraction(self._draw);
+            
+            //开启捕捉功能
+            self.editSnap = new ol.interaction.Snap({
+            	source: layer.getSource(),
+    			//features: self.selectSource,  
+    			pixelTolerance:15   
+    		 });
+            map.addInteraction(self.editSnap);
+            if (events && !OpenMap.is(events, 'Object')) {
+                console.warn('事件参数错误！');
+                return;
+            } else {
+                for (var e in events) {
+                    if (events.hasOwnProperty(e)) {
+                        self._draw.dispatchEvent(e);
+                        self._draw.on(e, events[e]);
+                    }
+                }
+            }
+        },
+        /**
+         * 关闭编辑元素功能
+         */
+        closeEditor:function(){
+        	var self = this;
+            var map = self.getMap();
+            
+            /*if(self.editSelectFeature){
+            	map.removeInteraction(self.editSelectFeature);
+            }*/
+            //选择作为默认工具
+            if(self.editFeatureInteraction){
+            	map.removeInteraction(self.editFeatureInteraction);
+            }
+            if(self.editSnap){
+            	map.removeInteraction(self.editSnap);
+            }
+        },
+        /**
+         * 清空选择元素
+         */
+        clearSelect:function(){
+        	var self = this;
+        	
+            var selectedFeatures = self.editSelectFeature.getFeatures().clear();
+            self.selectSource = new ol.Collection();   	
+            self.currentFeature=null; 
+           /* selectedFeatures.on(['remove'], function() {
+                var names = selectedFeatures.getArray().map(function(feature) {
+                  return feature.get('ID');
+                });
+                 
+              });*/
+            /*self.editSelectFeature.getFeatures()=[];
+            self.selectSource = new ol.Collection();   	
+            self.currentFeature=null;*/
+        },
+        /**
+         * 关闭选择元素功能
+         */
+        closeSelect:function(){
+        	var self = this;
+            var map = self.getMap();
+         
+            self.selectSource = new ol.Collection();   	
+            self.currentFeature=null;
+            //移除选择交互设置
+            if(self.editSelectFeature){
+            	map.removeInteraction(self.editSelectFeature);
+            }           
+        },
+        /**
+         * 选择要素
+         */
+        oSelect:function(layerName){
+        	if (typeof layerName === 'undefined') {
+                console.error('select layer is error!');
+                return;
+            } 
+        	var self = this;
+        	var map = self.getMap();
+            var layer = self.getLayer(layerName);
+        	//初始化变量
+            self.selectSource = new ol.Collection();   	
+            self.currentFeature=null;
+            
+            //self.closeEditor();
+            if(self.editSelectFeature){
+            	map.removeInteraction(self.editSelectFeature);
+            }
+            self.editSelectFeature = new ol.interaction.Select({
+    		    condition: ol.events.condition.singleClick,
+    			layers:[layer],
+    		    style:new ol.style.Style({
+    		        
+    		    	fill:new ol.style.Fill({
+    		            color:'rgba(255, 255, 255, 0.6)'
+    		          }),
+    		          stroke:new ol.style.Stroke({
+    		            color:'#00ffff',
+    		            width : 2
+    		          })
+    		        })
+    		});
+            
+    		if (self.editSelectFeature != null) {
+        		map.addInteraction(self.editSelectFeature);
+        		self.editSelectFeature.on('select', function(evt) {
+        			
+        			self.selectSource.forEach(function (feature){
+        			if(!feature){
+        				self.selectSource.remove(feature);	
+        			}			
+        			});
+        		
+	        		if(evt.selected.length>0){
+	        			evt.selected.forEach(function (feature) {
+	        				if(feature){
+	        					self.selectSource.push(feature);
+	        		       }
+	        		    });
+	        		}
+	        		
+	        		if(evt.deselected.length>0){
+	        			evt.deselected.forEach(function (feature) {
+	        				if(feature){
+	        					self.selectSource.remove(feature);
+	        				}
+	        		    });
+	        		}
+	        		
+	        		if(self.selectSource.getLength()>0){
+	        			self.currentFeature = self.selectSource.getArray()[0];
+	        		}else{
+	        			if(self.tempEditLayer){
+	        				self.tempEditLayer.getSource().clear();	
+	        			}	        			
+	        		}   		
+	        		
+	        		//显示信息框
+                });
+        	}
+        },
+        /**
+         * @desc 开启编辑功能
+         * @param type {Point|LineString|Box|Polygon|Circle} 点、线、矩形、多边形、圆
+         *        events : drawstart,drawend,change,propertychange
+         */
+        oEditor: function (layerName, events) {
+            if (typeof layerName === 'undefined') {
+                console.error('edit layer is error!');
+                return;
+            }            
+            var self = this;
+            var map = self.getMap();
+            var layer = self.getLayer(layerName);
+            if(layer == null) return;
+            
+            if(self.selectSource.getLength()==0){
+            	alert("please select feature first!");
+            	return;
+            }
+            self.setDoubleClickZoomState(false);
+            //设置编辑过程样式
+            if(!self.tempEditLayer){
+            	var tempEditSource = new ol.source.Vector({});	
+            	self.tempEditLayer = new ol.layer.Vector({
+           		   source: tempEditSource,
+           		   projection:myprojection,
+           		   name:"tmpEditLayer",
+           		   style:new ol.style.Style({
+           		        image:new ol.style.Circle({
+           		          radius:5,
+           		    	fill:new ol.style.Fill({
+           		            color:'#2D9DEC'
+           		          }),
+           		          stroke:new ol.style.Stroke({
+           		            color:'rgba(0, 255, 255, 0.6)'
+           		          }),
+           		          image: new ol.style.Circle({
+           			            radius: 3,
+           			            fill: new ol.style.Fill({
+           			                color: '#FF0000'
+           			            })
+           			        })
+           		        })
+           		    })
+           		 });
+            }
+            /*//初始化变量
+            self.selectSource = new ol.Collection();   	
+            self.currentFeature=null;
+            
+            self.closeEditor();
+            self.editSelectFeature = new ol.interaction.Select({
+    		    condition: ol.events.condition.singleClick,
+    			layers:[layer],
+    		    style:new ol.style.Style({
+    		        
+    		    	fill:new ol.style.Fill({
+    		            color:'rgba(255, 255, 255, 0.6)'
+    		          }),
+    		          stroke:new ol.style.Stroke({
+    		            color:'rgba(0, 255, 255, 0.6)'
+    		          })
+    		        })
+    		});*/
+    		
+            self.editFeatureInteraction =new ol.interaction.Modify({
+    	    features: self.selectSource,   
+    	    style:new ol.style.Style({	        
+    	        fill:new ol.style.Fill({
+    	          color:'rgba(255, 255, 255, 0.6)'
+    	        }),
+    	        stroke:new ol.style.Stroke({
+    	          color:'rgba(0, 255, 255, 0.6)'
+    	        })
+    	      })
+    	  	});
+    	
+            self.editSnap = new ol.interaction.Snap({
+            	source: layer.getSource(),
+    			//features: self.selectSource,  
+    			pixelTolerance:15   
+    		 });
+    		
+    		
+    		//置于顶层  ---可不要 		
+    		if(layer){
+    			map.removeLayer(layer);
+    			map.addLayer(layer);  //置于顶层
+    		}
+    		if(self.tempEditLayer){
+        		map.removeLayer(self.tempEditLayer);
+        		map.addLayer(self.tempEditLayer);  //置于顶层
+        	}
+    	
+/*    		if (self.editSelectFeature != null) {
+    		map.addInteraction(self.editSelectFeature);
+    		self.editSelectFeature.on('select', function(evt) {
+    			
+    			self.selectSource.forEach(function (feature){
+    			if(!feature){
+    				self.selectSource.remove(feature);	
+    			}			
+    			});
+    		
+    		if(evt.selected.length>0){
+    			evt.selected.forEach(function (feature) {
+    				if(feature){
+    					self.selectSource.push(feature);
+    		       }
+    		    });
+    		}
+    		
+    		if(evt.deselected.length>0){
+    			evt.deselected.forEach(function (feature) {
+    				if(feature){
+    					self.selectSource.remove(feature);
+    				}
+    		    });
+    		}
+    		
+    		if(self.selectSource.getLength()>0){
+    			self.iniEditingStyle();
+    		}else{
+    			self.tempEditLayer.getSource().clear();
+    		}
+            });
+    		}*/
+    	
+    		if(self.selectSource.getLength()>0){
+    			self.iniEditingStyle();
+    		}else{
+    			self.tempEditLayer.getSource().clear();
+    		}
+    		
+    	if (self.editFeatureInteraction != null) {
+    		map.addInteraction(self.editFeatureInteraction);
+    		map.addInteraction(self.editSnap);
+    		
+    		var originalCoordinates = {};
+    		var isRectangle =false;
+    		var oldCoordinates;
+    		self.editFeatureInteraction.on('modifyend', function(evt) {
+    			if(!evt.features) return;
+    			ol.Observable.unByKey(listener);
+    			
+    		    evt.features.forEach(function (feature) {
+    		        if (feature in originalCoordinates ) {  //&& Math.random() > 0.5
+    		        	
+    		            delete originalCoordinates[feature];
+    		            if(feature.getGeometry().getType()=="Circle"){
+    					originalCoordinates[feature] = feature.getGeometry().getCenter();
+    					}else{    		            
+    		            if(isRectangle){
+    		            	if(feature.getGeometry().getCoordinates()[0].length==4){
+    		            		//删除一个点
+    		            		feature.getGeometry().setCoordinates([
+    				            oldcoordinates
+    				        	]);
+    		            		originalCoordinates[feature] = feature.getGeometry().getCoordinates();		            		
+    		            	}else{
+    		            		var newcoordinates = feature.getGeometry().getCoordinates()[0];
+    		            		var start;
+    		            		var end;
+    		            		if(newcoordinates[0][0]!=oldcoordinates[0][0] && newcoordinates[0][1]!=oldcoordinates[0][1] ){
+    		            			start = newcoordinates[0];
+    		            			end = newcoordinates[2];
+    		            		}else if(newcoordinates[1][0]!=oldcoordinates[1][0] && newcoordinates[1][1]!=oldcoordinates[1][1] ){
+    		            			start = [newcoordinates[1][0],newcoordinates[3][1]];
+    		            			end = [newcoordinates[3][0],newcoordinates[1][1]];
+    		            		}else if(newcoordinates[2][0]!=oldcoordinates[2][0] && newcoordinates[2][1]!=oldcoordinates[2][1] ){
+    		            			start = newcoordinates[0];
+    		            			end = newcoordinates[2];
+    		            		}else if(newcoordinates[3][0]!=oldcoordinates[3][0] && newcoordinates[3][1]!=oldcoordinates[3][1] ){
+    		            			start = [newcoordinates[1][0],newcoordinates[3][1]];
+    		            			end = [newcoordinates[3][0],newcoordinates[1][1]];
+    		            		}
+    							if(start && end){								
+    							
+    		            		feature.getGeometry().setCoordinates([
+    				            [start, [start[0], end[1]], end, [end[0], start[1]], start]
+    				        	]);    		            		
+    				        	originalCoordinates[feature] = feature.getGeometry().getCoordinates();
+    				        	
+    				        	}
+    		            	}
+    		            	isRectangle =false;
+    						oldCoordinates = [];
+    		            }else{
+    		            	originalCoordinates[feature] = feature.getGeometry().getCoordinates();
+    		            
+    		            }
+    		            }
+    		            // remove and re-add the feature to make Modify reload it's geometry
+    		            self.selectSource.remove(feature);
+    		            self.selectSource.push(feature);
+    		            
+    		            self.iniEditingStyle();
+    		        }
+    		    });
+    		});
+      		var listener;
+      		self.editFeatureInteraction.on('modifystart', function(evt) {
+      			if(!evt.features) return;
+      			
+      			var sketch;
+      			evt.features.forEach(function (feature) {
+      				if(feature.getGeometry().getType()=="Circle"){
+      					originalCoordinates[feature] = feature.getGeometry().getCenter();
+      				}else{
+      					originalCoordinates[feature] = feature.getGeometry().getCoordinates();
+      					if(feature.getGeometry().getType()== "Polygon"){
+      						var coordinates = self.currentFeature.getGeometry().getCoordinates()[0];
+      						var bound = OpenMap.getExtentByCoordinates(coordinates);
+      						if(bound.indexOf(coordinates[1][0])>-1 && bound.indexOf(coordinates[1][1])>-1
+      						&& bound.indexOf(coordinates[3][0])>-1 && bound.indexOf(coordinates[3][1])>-1
+      						){
+      							if(!isRectangle){
+      								isRectangle =true;
+      								oldcoordinates = coordinates;
+      							}
+      						}
+      					}
+      				}		        
+      		        sketch = feature;
+      		   });	
+      		        
+      			listener = sketch.getGeometry().on('change', function(evt) {
+      		          var geom = evt.target;		         
+      		          self.iniEditingStyle();	
+      		      });
+      		});
+        }
+        },
+        iniEditingStyle:function(){
+        	var self =this;
+          	self.tempEditLayer.getSource().clear();
+          	
+            if(self.selectSource.getLength()==1){
+             self.currentFeature =self.selectSource.getArray()[0];
+             var currentFeature = self.currentFeature;
+        	 var cPnts =[];
+        	 var features =[]
+        	 var len;
+        	 //面的获取方式
+         	if(currentFeature.getGeometry().getType()=="Polygon"){
+         		cPnts = currentFeature.getGeometry().getCoordinates()[0];
+         		len = cPnts.length-1;
+         	}else if(currentFeature.getGeometry().getType()=="LineString"){
+         		cPnts = currentFeature.getGeometry().getCoordinates();
+         		len = cPnts.length;
+         	}else if(currentFeature.getGeometry().getType()=="Point"){
+         		cPnts = currentFeature.getGeometry().getCoordinates();
+         		len=0;
+         		features[0] = new ol.Feature({geometry:new ol.geom.Point(cPnts),});		
+         	}else if(currentFeature.getGeometry().getType()=="Circle"){
+         		
+         		len=2;
+         		cPnts[0] = currentFeature.getGeometry().getCenter();
+         		cPnts[1] = currentFeature.getGeometry().getLastCoordinate();
+         		//features[1] = new ol.Feature({geometry:new ol.geom.Point(cPnts)});
+         	}
+            for(var i=0; i<len; i++){
+            	//var id = 'p-helper-control-point-div' + '-' + i;	       
+            	features[i] = new ol.Feature({geometry:new ol.geom.Point(cPnts[i]),});		
+            }
+            self.tempEditLayer.getSource().addFeatures(features);
+            }
+        },
+        /**
+         * 设置DoubleClickZoom的状态，绘图和编辑过程中都不需要激活
+         */
+        setDoubleClickZoomState:function(isActive){        	
+        	var map = this.getMap();
+        	var interactions = map.getInteractions();
+      	    var length = interactions.getLength();
+      	    for (var i = 0; i < length; i++) {
+      	        var item = interactions.item(i);
+      	        if (item instanceof ol.interaction.DoubleClickZoom) {    	            
+      	            item.setActive(isActive);
+      	            break;
+      	        }
+      	    }
+        },
+        
         /**
         * 路况图层
         *'beilun:TRANETROAD','FEATUREGUI,FCODE,FNAME,FSCALE,DISPLAY,GEOMETRY'
