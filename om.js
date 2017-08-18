@@ -2409,52 +2409,83 @@
         */
         adminLayerVisibility: function (typeName, propertyName, callbackName, filter, fn) {
             var self = this;
+	    var status_key = 'STATUS';
+            //是否需要
+            var isNeedHttp = true;
+            if(self.allRoadFeatures)
+            {
+               isNeedHttp = false;
+            }
+            if(typeName=='5分钟'||typeName=='15分钟'||typeName=='1小时后')
+            {
+                    if(typeName=='5分钟'){
+                        status_key = 'PRE_5MIN_STATUS';
+                    }else if(typeName=='15分钟'){
+                        status_key = 'PRE_15MIN_STATUS';
+                    }else if(typeName=='1小时后'){
+                        status_key = 'PRE_1HOUR_STATUS';
+                    }
+            }
             //wfs回调方法
             window[callbackName] = function (res) {
+            	  
                 var myprojection = self.getProjection();
                 var format = new ol.format.GeoJSON();
-                self.roadFeatures = format.readFeatures(res, { featureProjection: myprojection });
-                self.getLayer('roadLayer').getSource().addFeatures(self.roadFeatures);
-                // adminWfsLayer.getSource().addFeatures(self.roadFeatures);
+                self.allRoadFeatures = self.roadFeatures = format.readFeatures(res, { featureProjection: myprojection });
+                
+                 if(filter)
+            	  {
+            	  		var showFeatures = [];
+            	  		for(var i =0; i<self.allRoadFeatures.length;i++)
+            	  		{
+            	  			for(var j=0 ; j<filter.length;j++)
+            	  			{
+            	  				if(self.allRoadFeatures[i].get(filter[j].propertyName) == filter[j].value)
+            	  				{
+            	  					showFeatures.push(self.allRoadFeatures[i]);
+            	  					break;
+            	  				}
+            	  			}
+            	  			
+            	  		}
+            	  	self.roadFeatures = showFeatures;
+            	  	self.getLayer('roadLayer').getSource().addFeatures(showFeatures);
+            	  }
+            	  else
+            	  {
+            	  	self.getLayer('roadLayer').getSource().addFeatures(self.roadFeatures);
+            	  }
+                
                 if (fn) fn();
             };
             function getFeature(options) {
-                $.ajax('http://192.168.3.233:8888/geoserver/beilun/wfs', {
+                $.ajax('/xk_monitor/congest/getTrafficCache?functionName='+options.callback, {
                     type: 'GET',
-                    data: {
-                        service: 'WFS',
-                        version: '1.1.0',
-                        request: 'GetFeature',
-                        typename: options.typename,
-                        propertyname: options.propertyname,
-                        maxfeatures: options.maxfeatures,
-                        srsname: options.srid,
-                        outputFormat: 'text/javascript',
-                        viewparams: options.viewparams,
-                        bbox: (typeof options.extent === 'undefined') ? undefined : options.extent.join(',') + ',' + options.srid,//与filter只能用一个
-                        filter: options.filter
-                    },
-                    dataType: 'jsonp',
-                    jsonpCallback: 'callback:' + options.callback,
-                    jsonp: 'format_options'
+                    dataType: 'json',
+                    success:function(str){
+                    	 eval('(' + str.data + ')'); 
+                    }
                 })
             }
 
             var wfcVectorSource = new ol.source.Vector();
-            getFeature({
-                typename: typeName,//'poi:POI_POINT',
-                propertyname: propertyName, //'ID,NAMEC,GEOMETRY',
-                maxfeatures: 20000,
-                srid: 'EPSG:4326',
-                filter: filter,
-                //filter:ol.format.filter.equalTo('OWNER', '360300'),  无效，用xml格式，并且有命名空间
-                callback: callbackName
-            });
+            if(isNeedHttp){
+
+                getFeature({
+                    typename: 'xk:ROAD_STATUS',//'poi:POI_POINT',
+                    propertyname: 'OBJECTID,NAME,GEOMETRY,STATUS,PRE_5MIN_STATUS,PRE_15MIN_STATUS,PRE_1HOUR_STATUS,TYPE_CODE', //'ID,NAMEC,GEOMETRY',
+                    maxfeatures: 20000,
+                    srid: 'EPSG:4326',
+                    filter: filter,
+                    //filter:ol.format.filter.equalTo('OWNER', '360300'),  无效，用xml格式，并且有命名空间
+                    callback: callbackName
+                });
+            }
 
             var getText = function (feature, resolution) {
                 var type = "normal";
                 var maxResolution = 0.000005364418029785156;//6.705522537231445e-7;
-                var text = feature.get('FNAME');
+                var text = feature.get('NAME');
                 //style.getText().setText(resolution < 5000 ? feature.get('name') : '');
                 if (resolution > maxResolution) {
                     text = '';
@@ -2473,52 +2504,49 @@
             var colorValue = 10;
             var createPolygonStyleFunction = function () {
                 return function (feature, resolution) {
-                	var mapZoom = self._map.getView().getZoom();
-                	var name =resolution < 000005364418029785156 ? feature.get('FNAME') : '';
-                    var text = mapZoom + name;                    
-                    if (!highlightStyleCache[text]) {
-                    	var style =new ol.style.Style({
+                    var mapZoom = self._map.getView().getZoom();
+                    var name =resolution < 000005364418029785156 ? feature.get('NAME') : '';
+                    var text = mapZoom + name;
+                    //if (!highlightStyleCache[text]) {
+                        var style =new ol.style.Style({
                         fill: new ol.style.Fill({
-                            color: "rgba(255, 255, 255, 1)" 
+                            color: "rgba(255, 255, 255, 1)"
                         }),
                         stroke: new ol.style.Stroke({
-                            color: "rgba(255, 255, 255, 1)",   
+                            color: "rgba(255, 255, 255, 0)",
                             width: 0
                         }),
                         text: createTextStyle(feature, resolution)
-                    });                    
-                    var fscale = parseInt(feature.get('FSCALE'));
+                    });
+                    var fscale = parseInt(feature.get('TYPE_CODE'));
                     if(mapZoom >=fscale){
-                    	style = new ol.style.Style({
+                        style = new ol.style.Style({
                             fill: new ol.style.Fill({
                                 color: "rgba(255, 255, 255, 1)" //getAreaColor("",0,100,colorValue ) //****.parkFillColor   rgba(255, 255, 255, 1)
                             }),
                             stroke: new ol.style.Stroke({
-                                color: roadColor(feature), //"rgba(0, 255, 255, 1)",//"#319FD3",//****.parkBorderColor,  
+                                color: roadColor(feature), //"rgba(0, 255, 255, 1)",//"#319FD3",//****.parkBorderColor,
                                 width: 3
                             }),
                             text: createTextStyle(feature, resolution)
                         });
-                    } 
-                    highlightStyleCache[text] =style;
                     }
-                    return [highlightStyleCache[text]];
+                    //highlightStyleCache[text] =style;
+                   // }
+                    return [style];
                 }
             };
 
             var roadColor = function (feature) {
                 var color = "#c5c3c8";
-                /* if(feature.get('LANES')=="6" ||feature.get('LANES')=="5" ){
+                if(feature.get(status_key)== 1){
                     color ='#17BF00'; //G
-                }else if(feature.get('LANES')=="4" ||feature.get('LANES')=="3" ){
+                }else if(feature.get(status_key)==4 ){
                     color ='#F33030';   //R
-                }else if(feature.get('LANES')=="2"){
+                }else if(feature.get(status_key)==3){
                     color ='#FF9E19';
-                } */
-                if (feature.get('FNAME') == undefined) {
-                    color = '#17BF00'; //G
-                } else {
-                    color = '#F33030';  //r
+                }else if(feature.get(status_key)==2){
+                    color ='#ffff00';
                 }
 
                 return color;
@@ -2559,6 +2587,34 @@
 
             //添加图层
             this.addLayer("roadLayer", adminWfsLayer);
+
+            //如果读的缓存就直接添加路况
+            if(!isNeedHttp){
+            		//如果是获取过滤的
+            	  if(filter)
+            	  {
+            	  		var showFeatures = [];
+            	  		for(var i =0; i<this.allRoadFeatures.length;i++)
+            	  		{
+            	  			for(var j=0 ; j<filter.length;j++)
+            	  			{
+            	  				if(this.allRoadFeatures[i].get(filter[j].propertyName) == filter[j].value)
+            	  				{
+            	  					showFeatures.push(this.allRoadFeatures[i]);
+            	  					break;
+            	  				}
+            	  			}
+            	  			
+            	  		}
+            	  	this.roadFeatures = showFeatures;
+            	  	self.getLayer('roadLayer').getSource().addFeatures(showFeatures);
+            	  }
+            	  else
+            	  {
+            	  		self.getLayer('roadLayer').getSource().addFeatures(this.allRoadFeatures);
+            	  }
+            	  if(fn)fn();
+            }
 
             var getAreaColor = function (name, min, max, value) {
                 value = parseFloat(value);
@@ -2791,7 +2847,8 @@
                     /*  var hdms = ol.coordinate.toStringHDMS(ol.proj.transform(
                              coordinate, 'EPSG:4490', 'EPSG:4490'));  */
                     overlay.setPosition(coordinate);
-                    content.innerHTML = '<p>You clicked here:</p><code>' + ' 路名称: ' + evt.selected[0].get("FNAME") + '\n' + '</code>';//feature.get("name")
+                    content.innerHTML = '<p>You clicked here:</p><code>' + ' 路名称: ' + evt.selected[0].get("NAME") + '\n' + ' OBJECTID' + evt.selected[0].get("OBJECTID")   //feature.get("name")
+                    '</code>';
                     container.style.display = 'block';
                     title.innerHTML = "提示信息";
                     title.style.display = 'block';
@@ -2901,6 +2958,7 @@
                 //添加起止点
                 pFeatures[0] = new ol.Feature(new ol.geom.Point(cor1));
                 pFeatures[1] = new ol.Feature(new ol.geom.Point(cor2));
+                tempRoadlayer.getSource().clear();
                 tempRoadlayer.getSource().addFeatures(pFeatures);
 
                 //定位道路
@@ -2912,12 +2970,28 @@
         },
         //构建路段查询xml
         buildFilterBySigmentIds: function (sigmentIds) {
-            var xml = '<Filter xmlns="http://www.opengis.net/ogc"><Or>';
+        		var temp = [];
+        		 for (var i = 0; i < sigmentIds.length; i++) {
+        		 	temp.push({"propertyName":"OBJECTID","value":sigmentIds[i]});
+        		}
+            /*var xml = '<Filter xmlns="http://www.opengis.net/ogc"><Or>';
             for (var i = 0; i < sigmentIds.length; i++) {
-                xml += '<PropertyIsEqualTo><PropertyName>FEATUREGUI</PropertyName><Literal>' + sigmentIds[i] + '</Literal></PropertyIsEqualTo>';
+                xml += '<PropertyIsEqualTo><PropertyName>OBJECTID</PropertyName><Literal>' + sigmentIds[i] + '</Literal></PropertyIsEqualTo>';
             }
-            xml += '</Or></Filter>';
-            return xml;
+            xml += '</Or></Filter>';*/
+            return temp;
+        }
+        ,buildFilterByRoadIds: function (roadIds) {
+        	var temp = [];
+        		 for (var i = 0; i < sigmentIds.length; i++) {
+        		 	temp.push({"propertyName":"ROAD_ID","value":sigmentIds[i]});
+        		}
+            /*var xml = '<Filter xmlns="http://www.opengis.net/ogc"><Or>';
+            for (var i = 0; i < roadIds.length; i++) {
+                xml += '<PropertyIsEqualTo><PropertyName>ROAD_ID</PropertyName><Literal>' + roadIds[i] + '</Literal></PropertyIsEqualTo>';
+            }
+            xml += '</Or></Filter>';*/
+            return temp;
         }
     };
     return OpenMap;
