@@ -1,4 +1,9 @@
 ﻿// framework based on openlayers Version v4.0.1 with jQuery
+/**
+    基于openlayers的工具模块；
+    * 提供了常用的地图相关操作
+    @module om
+*/
 (function (root, factory) {
     if (typeof exports === "object") {
         module.exports = factory();
@@ -8,22 +13,39 @@
         root.OpenMap = factory(root.ol);
     }
 }(this, function (ol) {
+		/**
+     * OpenMap 
+     * @class OpenMap
+     * @constructor
+     * @param  {String} mapId 需要渲染的map的html documentId
+     * @param  {Object} ops 
+     *			@param {List} ops.center 地图的中心点 例：[120.561477,31.883179]
+     *      @param {int} ops.zoom 地图层级 例：15
+     *      @param {List} ops.layers 初始渲染的图层 例：[grouplayer,poiLayer]
+     *      @param {Object} ops.projection 坐标系对象 例：new ol.proj.Projection({code: 'EPSG:4326',units: 'degrees',});
+     */
     var OpenMap = this.OpenMap = function () {
         if (arguments.length) {
             this.init.apply(this, arguments);
         }
     };
+    
     /**
-     * @desc 判断是否为 Object,Array,String,RegExp,Boolean,Number,Function
-     */
+		 * 判断是否为 Object,Array,String,RegExp,Boolean,Number,Function
+		 * @method OpenMap.is
+		 * @param  {Object} arg1 需要判断的对象
+		 * @param  {String} content 需要判别是否的目标对象类型(Object,Array,String,RegExp,Boolean,Number,Function)
+		 */
     OpenMap.is = function (arg1, arg2) {
         return Object.prototype.toString.call((arg1)) === '[object ' + arg2 + ']';
     };
+    
     /**
-     * @desc 将wkt格式的字符串转换为Feature
-     * @param wktStr wkt格式的字符串
-     * @param source 源投影
-     * @param destination 目标投影
+     * 将wkt格式的字符串转换为Feature
+     * @method OpenMap.wkt2Feature
+     * @param {String} wktStr wkt格式的字符串
+     * @param {String} source 源投影
+     * @param {String} destination 目标投影
      */
     OpenMap.wkt2Feature = function(wktStr,source, destination){
     	var format = new ol.format.WKT();
@@ -34,29 +56,35 @@
         }
         return feature;        
     };
+    
     /**
-     * @desc 将openlayers 的geometry 转换为 jsts 对应的Geometry
-     * @param geometry openlayers对应的geometry 
+     * 将openlayers 的geometry 转换为 jsts 对应的Geometry
+     * @method OpenMap.olGeometry2JstsGeometry
+     * @param {Object} geometry openlayers对应的geometry 
      */
     OpenMap.olGeometry2JstsGeometry = function(geometry){
     	//convert the OpenLayers geometry to a JSTS geometry
     	var parser = new jsts.io.OL3Parser();    	
         return parser.read(geometry);        
     };
+    
     /**
-     * @desc 将openlayers 的geometry 转换为 jsts 对应的Geometry
-     * @param geometry openlayers对应的geometry 
+     * 将openlayers 的geometry 转换为 jsts 对应的Geometry
+     * @method OpenMap.JstsGeometry2olGeometry
+     * @param {Object} geometry openlayers对应的geometry 
      */
     OpenMap.JstsGeometry2olGeometry = function(jtstGeometry){
     	//convert the JSTS geometry to a OpenLayers geometry
     	var parser = new jsts.io.OL3Parser();    	
         return parser.write(jtstGeometry);        
     };
+    
     /**
-     * @desc geometry对象的buffer运算(缓冲区分析)
-     * @param parser jsts.io.OL3Parser()
-     * @param geometry ol geometry
-     * @param distance 距离
+     * geometry对象的buffer运算(缓冲区分析)
+     * @method OpenMap.buffer
+     * @param {Object} parser jsts.io.OL3Parser()
+     * @param {Object} geometry ol geometry
+     * @param {Double} distance 距离
      * @return 返回包含所有的点在一个指定距离内的多边形和多多边形
      */
     OpenMap.buffer = function(parser,geometry,distance){    	
@@ -65,11 +93,13 @@
     	var bufferGeo = jstsGeom.buffer(distance);  
         return parser.write(bufferGeo);      
     };
+    
     /**
-     * @desc geometry对象的convexHull运算(凸壳分析)
-     * @param parser jsts.io.OL3Parser()
-     * @param geometry ol geometry
-     * @return 返回包含几何形体的所有点的最小凸壳多边形（外包多边形） 
+     * geometry对象的convexHull运算(凸壳分析)
+     * @method OpenMap.convexHull
+     * @param {Object} parser jsts.io.OL3Parser()
+     * @param {Object} geometry ol geometry
+     * @return {Object} 返回包含几何形体的所有点的最小凸壳多边形（外包多边形） 
      */
     OpenMap.convexHull = function(parser,geometry){    	
     	//var parser = new jsts.io.OL3Parser();
@@ -77,113 +107,142 @@
     	var geo = jstsGeom.convexHull();  
         return parser.write(geo);      
     };
+    
     /**
-     * @desc geometry对象的intersection运算(交叉分析)
-     * @param parser jsts.io.OL3Parser()
-     * @param geometry1 ol geometry
-     * @param geometry2 ol geometry
-     * @return 返回两个同维度几何对象的交集
+     * geometry对象的intersection运算(交叉分析)
+     * @method OpenMap.intersection
+     * @param {Object} parser jsts.io.OL3Parser()
+     * @param {Object} geometry1 ol geometry
+     * @param {Object} geometry2 ol geometry
+     * @return {Object} 返回两个同维度几何对象的交集
      */
     OpenMap.intersection = function(parser,geometry1,geometry2){    	
     	var geo = parser.read(geometry1).intersection(parser.read(geometry2));  
         return parser.write(geo);      
     };
+    
     /**
-     * @desc geometry对象的union运算(联合分析)
-     * @param parser jsts.io.OL3Parser()
-     * @param geometry1 ol geometry
-     * @param geometry2 ol geometry
-     * @return 返回两个同维度几何对象的并集
+     * geometry对象的union运算(联合分析)
+     * @method OpenMap.union
+     * @param {Object} parser jsts.io.OL3Parser()
+     * @param {Object} geometry1 ol geometry
+     * @param {Object} geometry2 ol geometry
+     * @return {Object} 返回两个同维度几何对象的并集
      */
     OpenMap.union = function(parser,geometry1,geometry2){    	
     	var geo = parser.read(geometry1).union(parser.read(geometry2));  
         return parser.write(geo);      
     };
+    
     /**
-     * @desc geometry对象的difference运算(差异分析)
-     * @param parser jsts.io.OL3Parser()
-     * @param geometry1 ol geometry
-     * @param geometry2 ol geometry
-     * @return 返回两个几何对象的差集
+     * geometry对象的difference运算(差异分析)
+     * @method OpenMap.difference
+     * @param {Object} parser jsts.io.OL3Parser()
+     * @param {Object} geometry1 ol geometry
+     * @param {Object} geometry2 ol geometry
+     * @return {Object} 返回两个几何对象的差集
      */
     OpenMap.difference = function(parser,geometry1,geometry2){    	
     	var geo = parser.read(geometry1).difference(parser.read(geometry2));  
         return parser.write(geo);      
     };
+    
     /**
-     * @desc geometry对象的symDifference运算(对称差异分析)
-     * @param parser jsts.io.OL3Parser()
-     * @param geometry1 ol geometry
-     * @param geometry2 ol geometry
-     * @return 返回两个几何图形的对称差分，即两个几何的并集部分减去两个几何的交集部分
+     * geometry对象的symDifference运算(对称差异分析)
+     * @method OpenMap.symDifference
+     * @param {Object} parser jsts.io.OL3Parser()
+     * @param {Object} geometry1 ol geometry
+     * @param {Object} geometry2 ol geometry
+     * @return {Object} 返回两个几何图形的对称差分，即两个几何的并集部分减去两个几何的交集部分
      */
     OpenMap.symDifference = function(parser,geometry1,geometry2){    	
     	var geo = parser.read(geometry1).symDifference(parser.read(geometry2));  
         return parser.write(geo);      
     };
+    
     /**
-     * @desc geometry对象的空间关系-交叉:crosses
-     * @param parser jsts.io.OL3Parser()
-     * @param geometry1 ol geometry
-     * @param geometry2 ol geometry
+     * geometry对象的空间关系-交叉:crosses
+     * @method OpenMap.crosses
+     * @param {Object} parser jsts.io.OL3Parser()
+     * @param {Object} geometry1 ol geometry
+     * @param {Object} geometry2 ol geometry
      */
     OpenMap.crosses = function(parser,geometry1,geometry2){    	
         return parser.read(geometry1).crosses(parser.read(geometry2));      
     };
+    
     /**
-     * @desc geometry对象的空间关系-相离:disjoint
-     * @param parser jsts.io.OL3Parser()
-     * @param geometry1 ol geometry
-     * @param geometry2 ol geometry
+     * geometry对象的空间关系-相离:disjoint
+     * @method OpenMap.disjoint
+     * @param {Object} parser jsts.io.OL3Parser()
+     * @param {Object} geometry1 ol geometry
+     * @param {Object} geometry2 ol geometry
      */
     OpenMap.disjoint = function(parser,geometry1,geometry2){    	
         return parser.read(geometry1).disjoint(parser.read(geometry2));      
     };
+    
     /**
-     * @desc geometry对象的空间关系-相交:intersects
-     * @param parser jsts.io.OL3Parser()
-     * @param geometry1 ol geometry
-     * @param geometry2 ol geometry
+     * geometry对象的空间关系-相交:intersects
+     * @method OpenMap.intersects
+     * @param {Object} parser jsts.io.OL3Parser()
+     * @param {Object} geometry1 ol geometry
+     * @param {Object} geometry2 ol geometry
      */
     OpenMap.intersects = function(parser,geometry1,geometry2){    	
         return parser.read(geometry1).intersects(parser.read(geometry2));      
     };
+    
     /**
-     * @desc geometry对象的空间关系-相接:touches
-     * @param parser jsts.io.OL3Parser()
-     * @param geometry1 ol geometry
-     * @param geometry2 ol geometry
+     * geometry对象的空间关系-相接:touches
+     * @method OpenMap.touches
+     * @param {Object} parser jsts.io.OL3Parser()
+     * @param {Object} geometry1 ol geometry
+     * @param {Object} geometry2 ol geometry
      */
     OpenMap.touches = function(parser,geometry1,geometry2){    	
         return parser.read(geometry1).touches(parser.read(geometry2));      
     };
+    
     /**
-     * @desc geometry对象的空间关系-被包含:within
-     * @param parser jsts.io.OL3Parser()
-     * @param geometry1 ol geometry
-     * @param geometry2 ol geometry
+     * geometry对象的空间关系-被包含:within
+     * @method OpenMap.within
+     * @param {Object} parser jsts.io.OL3Parser()
+     * @param {Object} geometry1 ol geometry
+     * @param {Object} geometry2 ol geometry
      */
     OpenMap.within = function(parser,geometry1,geometry2){    	
         return parser.read(geometry1).within(parser.read(geometry2));      
     };
+    
     /**
-     * @desc geometry对象的空间关系-包含:contains
-     * @param parser jsts.io.OL3Parser()
-     * @param geometry1 ol geometry
-     * @param geometry2 ol geometry
+     * geometry对象的空间关系-包含:contains
+     * @method OpenMap.contains
+     * @param {Object} parser jsts.io.OL3Parser()
+     * @param {Object} geometry1 ol geometry
+     * @param {Object} geometry2 ol geometry
      */
     OpenMap.contains = function(parser,geometry1,geometry2){
         return parser.read(geometry1).contains(parser.read(geometry2));      
     };
+    
     /**
-     * @desc geometry对象的空间关系-重叠:overlaps
-     * @param parser jsts.io.OL3Parser()
-     * @param geometry1 ol geometry
-     * @param geometry2 ol geometry
+     * geometry对象的空间关系-重叠:overlaps
+     * @method OpenMap.overlaps
+     * @param {Object} parser jsts.io.OL3Parser()
+     * @param {Object} geometry1 ol geometry
+     * @param {Object} geometry2 ol geometry
      */
     OpenMap.overlaps = function(parser,geometry1,geometry2){    	
         return parser.read(geometry1).overlaps(parser.read(geometry2));      
     };
+    
+    /**
+    * 根据坐标对象数组获取闭包范围
+    * @method OpenMap.getExtentByData
+    * @param {Object} 坐标对象数组[{lon:131.00,lat:30},...]
+    * @return {Object} [minx,miny,maxx, maxy] 
+    */
     OpenMap.getExtentByData=function(data){
     	var minx=180;
 		var miny=180;
@@ -211,6 +270,13 @@
 		}
 		return [minx,miny,maxx, maxy]; 
     };
+    
+    /**
+    * 根据坐标数组获取闭包范围
+    * @method OpenMap.getExtentByCoordinates
+    * @param {Object} 坐标数组 [[131.00,30],...]
+    * @return {Object} [minx,miny,maxx, maxy] 
+    */
     OpenMap.getExtentByCoordinates=function(data){
     	var minx=180;
 		var miny=180;
@@ -238,9 +304,13 @@
 		}
 		return [minx,miny,maxx, maxy]; 
     };
+    
     /**
-    * @desc 计算半径的长度(单位米)
-    * @param OpenMap,Object
+    * 计算半径的长度(单位米)
+    * @method OpenMap.calcRadius
+    * @param {Object} map对象
+    * @param {event} event事件
+    * @return {Double} 长度(单位米)
     */
     OpenMap.calcRadius = function (map, event) {
         event.feature.set("type", 'circle');
@@ -262,9 +332,13 @@
         dist = dist.toFixed(6);//单位是 米
         return dist;
     };
+    
     /**
-     * @desc 计算两点之间的距离(单位米)
-     * @param start,end
+     * 计算两点之间的距离(单位米)
+     * @method OpenMap.calcDistance
+     * @param {Object} start
+     * @param {Object} end
+     * @return {Double} 长度(单位米)
      */
      OpenMap.calcDistance = function (start,end) {
          // create sphere to measure on
@@ -274,19 +348,28 @@
          dist = dist.toFixed(6);//单位是 米
          return dist;
      };
+     
      /**
-      * @desc 计算多边形面积(单位平方米)
-      * @param polygon
+      *  计算多边形面积(单位平方米)
+      * @method OpenMap.calcArea
+      * @param {Object} polygon 
+      * @return {Double} 面积(单位平方米)
       */
      OpenMap.calcArea = function(polygon){    	 
     	 var wgs84sphere = new ol.Sphere(6378137);
     	 var coordinates = polygon.getLinearRing(0).getCoordinates();
 		 return Math.abs(wgs84sphere.geodesicArea(coordinates));
      };
+     
     OpenMap.prototype = {
         constructor: OpenMap,
         /**
          * 初始化图层组layer
+         * @method globalGroupLayer
+         * @param {Object} options
+         * @param {String} options.mapUrl 图层url地址
+         * @param {String} options.layers 图层组名称
+         * @return {Object} ol.layer.Group
          */
         globalGroupLayer: function (options) {
             if (typeof options === 'undefined'
@@ -314,6 +397,11 @@
         },
         /**
          * 初始化Image layer
+         * @method globalImageLayer
+         * @param {Object} options
+         * @param {String} options.mapUrl 图层url地址
+         * @param {String} options.layers 图层组名称
+         * @return {Object} ol.layer.Image
          */
         globalImageLayer: function (options) {
             if (typeof options === 'undefined'
@@ -337,6 +425,14 @@
         },
         /**
          * 初始化瓦片Layer
+         * @method globalTileLayer
+         * @param {Object} options
+         * @param {String} options.mapUrl 图层url地址
+         * @param {String} options.layers 图层组名称
+         * @param {String} options.srs 坐标系
+         * @param {Object} options.resolutions 解析度数组
+         * @param {Object} options.origin 切片范围坐标数组
+         * @return {Object} ol.layer.Tile
          */
         globalTileLayer: function (options) {
             if (typeof options === 'undefined'
@@ -371,6 +467,10 @@
         },
         /**
          * 初始化热力图：heatmap layer
+         * @method globalHeatmapLayer
+         * @param {Object} options
+         * @param {String} options.data 热力数据[{lon:131.00,lat:31.00,weight:11},...]
+         * @return {Object} ol.layer.Heatmap
          */
         globalHeatmapLayer: function (options) {
             /*if (typeof options === 'undefined'
@@ -396,6 +496,10 @@
         },
         /**
          * 初始化聚合图：Cluster layer
+         * @method globalClusterLayer
+         * @param {Object} options
+         * @param {String} options.data 热力数据[{lon:131.00,lat:31.00,image:'/xxxx'},...]
+         * @return {Object} ol.layer.Heatmap
          */
         globalClusterLayer: function (options) {
             /*if (typeof options === 'undefined'
@@ -484,6 +588,10 @@
         },
         /**
          * 初始化vector layer
+         * @method globalClusterLayer
+         * @param {Object} options
+         * @param {String} options.type Point(点), LineString(线),Circle(圆) ,Polygon(多边形)
+         * @return {Object} ol.layer.Vector
          */
         globalVectorLayer: function (options) {
             if (typeof options === 'undefined'
@@ -503,9 +611,16 @@
                 }
             });
         },
-        /**
-         * @desc 根据指定参数，初始化地图到容器中
-         */
+         /**
+		     * 根据指定参数，初始化地图到容器中 
+		     * @method init
+		     * @param  {String} id 需要渲染的map的html documentId
+		     * @param  {Object} options 
+		     *			@param {List} options.center 地图的中心点 例：[120.561477,31.883179]
+		     *      @param {int} options.zoom 地图层级 例：15
+		     *      @param {List} options.layers 初始渲染的图层 例：[grouplayer,poiLayer]
+		     *      @param {Object} options.projection 坐标系对象 例：new ol.proj.Projection({code: 'EPSG:4326',units: 'degrees',});
+		     */
         init: function (id, options) {
             var ele = document.getElementById(typeof id === 'undefined' ? '' : id);
             if (ele === null) {
@@ -568,25 +683,33 @@
             }));            
         },
         /**
-         * @desc 获取map对象
+         * 获取map对象
+         * @method getMap
+         * @return {Object} 返回map对象
          */
         getMap: function () {
             return this._map;
         },
         /**
-         * @desc 获取投影
+         * 获取投影
+         * @method getProjection
+         * @return {Object} 返回投影对象
          */
         getProjection: function () {
             return this._map.getView().getProjection();
         },
         /**
-         * @desc 获取投影编码
+         * 获取投影编码
+         * @method getProjectionCode
+         * @return {String} 返回投影编码
          */
         getProjectionCode: function () {
             return this.getProjection().getCode();
         },
         /**
-         * @desc 设置点默认样式
+         * 设置点默认样式
+         * @method getPointStyle
+         * @return {Object} 返回点默认样式对象
          */
         getPointStyle: function () {
             return new ol.style.Style({
@@ -608,7 +731,9 @@
             });
         },
         /**
-         * @desc 设置点图标默认样式
+         * 设置点图标默认样式
+         * @method getIconStyle
+         * @return {Object} 返回点图标默认样式对象
          */
         getIconStyle: function () {
             return new ol.style.Style({
@@ -623,7 +748,9 @@
             });
         },
         /**
-         * @desc 设置线面默认样式
+         * 设置线面默认样式
+         * @method getPolyStyle
+         * @return {Object} 返回点线面默认样式对象
          */
         getPolyStyle: function () {
             return new ol.style.Style({
@@ -636,7 +763,12 @@
             });
         },
         /**
-         * @desc 添加层
+         *  添加层
+         * @method addLayer
+         * @param  {String} layerName 层的名字key（可通过此key找到此层）
+         * @param  {Object} layerObj 需要添加的层对象
+         * @param  {bollean} force 是否强制重新创建
+         * @return {Object} 返回层对象
          */
         addLayer: function (layerName, layerObj, force) {
             if (force) {
@@ -653,13 +785,18 @@
             return layerObj;
         },
         /**
-         * @desc 获取层
+         * 获取层
+         * @method getLayer
+         * @param  {String} layerName 层的名字key
+         * @return {Object} 返回对应名称的层对象
          */
         getLayer: function (layerName) {
             return this._layer[layerName];
         },
         /**
-         * @desc 移除layer对象
+         * 移除layer对象
+         * @method getLayer
+         * @param  {String} layerName 层的名字key
          */
         removeLayer: function (layerName) {
             this._map.removeLayer(this.getLayer(layerName));
@@ -667,8 +804,10 @@
             delete this._layer[layerName];
         },
         /**
-         * @desc 向地图添加marker标记
-         * @returns {*} 返回构建的marker对象
+         * 向地图添加marker标记
+         * @method addMarker
+         * @param  {Object} option 需要创建的marker参数
+         * @returns {Object} 返回构建的marker对象
          */
         addMarker: function (option) {
             if (typeof option === 'undefined'
@@ -710,8 +849,10 @@
             return fea;
         },
         /**
-         * @desc 向地图添加多个marker标记
-         * @returns {*} 返回构建的marker对象
+         * 向地图添加多个marker标记
+         * @method addMarkers
+         * @param  {Object} option 需要创建的marker参数
+         * @returns {Object} 返回构建的marker对象
          */
         addMarkers: function (options) {
             if (typeof options === 'undefined'
@@ -747,7 +888,10 @@
             this._map.addLayer(_layer);
         },
         /**
-         * @desc 根据id获取marker
+         * 根据id获取marker
+         * @method getMarkerById
+         * @param  {String} id 
+         * @returns {Object} 返回id对应marker对象
          */
         getMarkerById: function (id) {
             if (typeof id === 'undefined') {
@@ -767,7 +911,9 @@
             }
         },
         /**
-         * @desc 添加聚合图层
+         * 添加聚合图层
+         * @method addCluster
+         * @param  {Object} arg 需要创建的聚合图层参数
          */
         addCluster: function (arg) {
             if (typeof arg === 'undefined' || !OpenMap.is(arg, 'Array')) {
@@ -834,8 +980,10 @@
             });
             self.addLayer(la, _layer).setVisible(vi);
         },
-        /**
+     /**
 		 * 根据数据获取蜂巢图形要素
+		 * @method getHoneycombGraphFeatures
+     * @param  {Object} option 需要创建的蜂巢图形参数
 		 */
 		getHoneycombGraphFeatures:function(option){			
 			if (!option || !option.layerName || !option.data) {
@@ -934,6 +1082,8 @@
 		},
 		/**
 		 * 根据数据获取网格图形要素
+		 * @method getGridFeatures
+     * @param  {Object} option 需要创建的网格图形参数
 		 */
 		getGridFeatures:function(option){			
 			if (!option || !option.layerName || !option.data) {
@@ -1015,7 +1165,9 @@
 	        console.info("grid total time " + endTime + "ms");
 		},
         /**
-         * @desc 添加覆盖元素
+         * 添加覆盖元素
+         * @method addOverLay
+     		 * @param  {Object} option 需要创建的覆盖元素参数
          */
         addOverLay: function (option) {
             if (!option || !option.position || !option.eid) {
@@ -1044,7 +1196,10 @@
             //self._map.renderSync();
         },
         /**
-         * @desc 获取所有的覆盖元素
+         * 获取所有的覆盖元素
+         * @method getOverlay
+         * @param  {String} id 覆盖元素id,如没传就返回所有
+     		 * @return  {Object|[]} 单个id覆盖元素or所有的覆盖元素
          */
         getOverlay: function () {
             if (arguments.length === 0) {
@@ -1057,6 +1212,8 @@
         },
         /**
          * 增加饼状图
+         * @method addChartOverlay
+         * @param  {Object} option 增加饼状图的参数
          */
 		addChartOverlay:function(option){
         	if (typeof option === 'undefined'
@@ -1089,6 +1246,8 @@
         },
         /**
          * 添加饼状图
+         * @method addChart
+         * @param  {Object} option 增加饼状图的参数
          */
         addChart:function(domid,data,size){
         	$('#'+domid).highcharts({  
@@ -1143,6 +1302,8 @@
         },
         /**
          * 删除Overlay：id 中包含参数domid的所有overlay
+         * @method removeOverlayByIndexOfId
+         * @param  {String} domid 需要删除的覆盖物domId
          */
         removeOverlayByIndexOfId:function(domid){
         	var self = this;
@@ -1156,6 +1317,8 @@
         },
         /**
          * 增加柱状图
+         * @method addBarGraphOverlay
+         * @param  {Object} option 需要创建的柱状图参数
          */
 		addBarGraphOverlay:function(option){
         	if (typeof option === 'undefined'
@@ -1181,8 +1344,10 @@
         	 $("#" + option.domid).css("display","block");
 		},
 		/**
-         * 添加柱状图
-         */
+    * 添加柱状图
+    * @method addBarGraph
+    * @param  {Object} option 需要创建的柱状图参数
+    */
 		addBarGraph:function(domid,data,height,width,categories,unit,ytitle,color){
 			 $('#'+domid).highcharts({  
 	  	         chart: {  
@@ -1238,6 +1403,8 @@
         },
         /**
          * 增加3d柱状图,需要引用3d.js包
+    		 * @method add3dBarGraphOverlay
+    		 * @param  {Object} option 需要创建的3d柱状图参数
          */
 		add3dBarGraphOverlay:function(option){
         	if (typeof option === 'undefined'
@@ -1264,6 +1431,8 @@
 		},
 		/**
          * 添加3d柱状图
+         * @method add3dBarGraph
+    		 * @param  {Object} option 需要创建的3d柱状图参数
          */
 		add3dBarGraph:function(domid,data,height,width,categories,unit,ytitle,color){
 			 $('#'+domid).highcharts({  
@@ -1337,7 +1506,9 @@
 	  	     }); 	
         },
         /**
-         * @desc 移除marker
+         * 移除marker
+         * @method removeMarker
+    		 * @param  {Object} m 需要移除marker对象
          */
         removeMarker: function (m) {
             if (typeof m === 'undefined' || !OpenMap.is(m, 'Object')) {
@@ -1350,6 +1521,8 @@
         },
         /**
          * 增加动画效果Overlay
+         * @method addAnimationOverlay
+    		 * @param  {Object} option 需要增加动画效果Overlay参数
          */
 		addAnimationOverlay:function(option){
         	if (typeof option === 'undefined'
@@ -1382,6 +1555,8 @@
 		},
         /**
          * 增加图片Overlay
+         * @method addImageOverlay
+    		 * @param  {Object} option 增加图片Overlay参数
          */
 		addImageOverlay:function(option){
         	if (typeof option === 'undefined'
@@ -1418,6 +1593,7 @@
 		},
 		/**
 		 * 导出图片,需要引用FileSaver.min.js
+		 * @method exportPicture
 		 */
 		exportPicture:function(){
 			var self = this;
@@ -1435,6 +1611,7 @@
 		},
 		/**
 		 * 导出pdf
+		 * @method exportPdf
 		 */
 		exportPdf:function(source,buttonId,format,resolution){
 		 var self = this;
@@ -1588,9 +1765,10 @@
 			};
 			
 			/**
-			 * Format length output.
-			 * @param {ol.geom.LineString} line The line.
-			 * @return {string} The formatted length.
+			 * 计算线的长度（内部函数）
+			 * @method formatLength
+			 * @param {ol.geom.LineString} 线对象.
+			 * @return {string} 返回线的长度.
 			 */
 			var formatLength = function(line) {
 			  var length;
@@ -1620,9 +1798,10 @@
 
 
 			/**
-			 * Format area output.
-			 * @param {ol.geom.Polygon} polygon The polygon.
-			 * @return {string} Formatted area.
+			 * 计算面面积（内部函数）
+			 * @method formatArea
+			 * @param {ol.geom.Polygon} 面对象.
+			 * @return {string} 返回面积.
 			 */
 			var formatArea = function(polygon) {
 			  var area;
@@ -1763,8 +1942,9 @@
 			$('div .tooltip').parent().remove();
 		},
         /**
-         * @desc 移除指定layer，从而移除依载该layer的所有marker
-         * @param arg
+         *  移除指定layer，从而移除依载该layer的所有marker
+         * @method removeMarkerByLayer
+			 	 * @param {string} layerName 需要移除对应层上的所有marker的层名
          */
         removeMarkerByLayer: function (layerName) {
             if (typeof layerName === 'undefined') {
@@ -1777,7 +1957,9 @@
             }
         },
         /**
-         * @desc 移除指定id的marker
+         *  移除指定id的marker
+         * @method removeMarkerById
+			 	 * @param {string} id 需要移除指定id的marker
          */
         removeMarkerById: function (id) {
             if (typeof id === 'undefined') {
@@ -1797,6 +1979,7 @@
         },
         /**
          * 左移：移动距离为当前屏幕长度的1/6
+         * @method moveLeft
          */
         moveLeft:function(){
           var self = this;
@@ -1808,6 +1991,7 @@
         },
         /**
          * 右移：移动距离为当前屏幕长度的1/6
+         * @method moveRight
          */
         moveRight:function(){
           var self = this;
@@ -1819,6 +2003,7 @@
         },
         /**
          * 上移：移动距离为当前屏幕宽度的1/6
+         * @method moveUp
          */
         moveUp:function(){
           var self = this;
@@ -1830,6 +2015,7 @@
         },
         /**
          * 下移：移动距离为当前屏幕宽度的1/6
+         * @method moveDown
          */
         moveDown:function(){
           var self = this;
@@ -1840,7 +2026,9 @@
        	  map.getView().setCenter(newCenter);
         },
         /**
-         * @desc 添加layer的监听事件
+         *  添加layer的监听事件
+         * @method addLayerListener
+         * @param {Object} layer 添加layer的监听事件的层对象
          */
         addLayerListener: function (layer) {
             //单个选择要素
@@ -1871,9 +2059,10 @@
             return layerSelect;
         },
         /**
-         * @desc 开启绘画功能
-         * @param type {Point|LineString|Box|Polygon|Circle} 点、线、矩形、多边形、圆
-         *        events : drawstart,drawend,change,propertychange
+         *  开启绘画功能
+         * @method openDraw
+         * @param {String} type 点、线、矩形、多边形、圆（Point|LineString|Box|Polygon|Circle） 
+         * @param {events} events drawstart,drawend,change,propertychange
          */
         openDraw: function (type, events) {
             if (typeof type === 'undefined' || ['Point', 'LineString', 'Box', 'Polygon', 'Circle'].indexOf(type) === -1) {
@@ -1936,13 +2125,16 @@
             }
         },
         /**
-         * @desc 返回绘画对象
+         *  返回绘画对象
+         * @method getDraw
+         * @return {Object} 返回绘画对象
          */
         getDraw: function () {
             return this._draw;
         },
         /**
-         * @desc 关闭绘画功能
+         *  关闭绘画功能
+         * @method closeDraw
          */
         closeDraw: function () {
             if (this._draw) {
@@ -1950,9 +2142,10 @@
             }
         },
         /**
-         * @desc 开启绘画功能
-         * @param type {Point|LineString|Box|Polygon|Circle} 点、线、矩形、多边形、圆
-         *        events : drawstart,drawend,change,propertychange
+         *  开启绘画功能
+         * @method oDraw
+         * @param {String} type 点、线、矩形、多边形、圆（Point|LineString|Box|Polygon|Circle） 
+         * @param {events} events drawstart,drawend,change,propertychange
          */
         oDraw: function (layerName,type, events) {
             if (typeof layerName === 'undefined') {
@@ -1998,6 +2191,7 @@
         },
         /**
          * 关闭编辑元素功能
+         * @method closeEditor
          */
         closeEditor:function(){
         	var self = this;
@@ -2016,6 +2210,7 @@
         },
         /**
          * 清空选择元素
+         * @method clearSelect
          */
         clearSelect:function(){
         	var self = this;
@@ -2035,6 +2230,7 @@
         },
         /**
          * 关闭选择元素功能
+         * @method closeSelect
          */
         closeSelect:function(){
         	var self = this;
@@ -2049,6 +2245,8 @@
         },
         /**
          * 选择要素
+         * @method oSelect
+         * @param {String} layerName 需要选中的层名称
          */
         oSelect:function(layerName){
         	if (typeof layerName === 'undefined') {
@@ -2120,9 +2318,10 @@
         	}
         },
         /**
-         * @desc 开启编辑功能
-         * @param type {Point|LineString|Box|Polygon|Circle} 点、线、矩形、多边形、圆
-         *        events : drawstart,drawend,change,propertychange
+         *  开启编辑功能
+         * @method oEditor
+         * @param {String} layerName 需要编辑的层名称
+         * @param {events} events 需要编辑的层事件
          */
         oEditor: function (layerName, events) {
             if (typeof layerName === 'undefined') {
@@ -2352,6 +2551,10 @@
       		});
         }
         },
+        /*
+         * 初始化编辑样式
+         * @method iniEditingStyle
+         */
         iniEditingStyle:function(){
         	var self =this;
           	self.tempEditLayer.getSource().clear();
@@ -2389,6 +2592,8 @@
         },
         /**
          * 设置DoubleClickZoom的状态，绘图和编辑过程中都不需要激活
+         * @method setDoubleClickZoomState
+         * @param {boolean} isActive 状态
          */
         setDoubleClickZoomState:function(isActive){        	
         	var map = this.getMap();
@@ -2404,12 +2609,17 @@
         },
         
         /**
-        * 路况图层
-        *'beilun:TRANETROAD','FEATUREGUI,FCODE,FNAME,FSCALE,DISPLAY,GEOMETRY'
+        * 添加路况图层
+        * @method adminLayerVisibility
+        * @param  {String} typeName 当前|5分钟|15分钟|1小时后，分别表示最新路况|预测5分钟|预测15分钟|预测1小时后
+        * @param  {String} propertyName 路况需要获取的属性名（目前传空即可）
+        * @param  {String} callbackName 全局异步回调的方法名（一般写callFn,假如一个页面有多个map则有区别即可）
+        * @param  {Object} filter 需要过滤的属性
+        * @param  {function} fn 回调执行方法
         */
         adminLayerVisibility: function (typeName, propertyName, callbackName, filter, fn) {
             var self = this;
-	    var status_key = 'STATUS';
+	    			var status_key = 'STATUS';
             //是否需要
             var isNeedHttp = true;
             if(self.allRoadFeatures)
@@ -2711,7 +2921,11 @@
 
         },
         /**
-         * @desc 添加vector图层选择事件
+         *  添加vector图层选择事件
+         * @method addLayerSelectListener
+         * @param  {String} layerName 需要添加事件的图层名称
+         * @param  {Object} selectCondition 需要添加的事件对象
+         * @param  {function} callback 回调执行方法
          */
         addLayerSelectListener: function (layerName,selectCondition,callback) {
             var layer = this.getLayer(layerName);
@@ -2783,7 +2997,12 @@
             return layerSelect;
         },
         
-        //添加车辆号牌提示
+        /*
+        * 添加车辆号牌提示
+        * @method createTextStyle
+        * @param  {String} carno 车牌号码
+        * @return {ol.style.Text} 文字提示样式
+        */
         createTextStyle: function(carno){
             var self = this;
             var align = "center";  //center 'left', 'right', 'center', 'end' or 'start'. Default is 'start'.
@@ -2811,8 +3030,12 @@
            });
         },
         
-        
-        //添加路网鼠标悬浮事件
+        /*
+        * 添加路网鼠标悬浮事件
+        * @method addLayerMoveListener
+        * @param  {String} layerName 需要添加事件的图层名
+        * @return {ol.interaction.Select} 返回选中事件的对象
+        */
         addLayerMoveListener: function (layerName) {
             var adminWfsLayer = this.getLayer(layerName);
             var self = this;
@@ -2861,7 +3084,14 @@
             return adminLayerSelect;
         },
         
-         //选中某车辆
+        /*
+        * 选中某车辆
+        * @method locateCar
+        * @param  {Object} layerSelect 选中的事件对象
+        * @param  {String} layerName 需要选中的图层名
+        * @param  {String} plateName 车牌号码
+        * @param  {function} callback 回调方法
+        */
         locateCar: function(layerSelect, layerName, plateName,callback) {
             console.log(layerName);
             var czoom = this._map.getView().getZoom();
@@ -2898,7 +3128,12 @@
                 }
             }
         },
-        //选中某道路
+         /*
+        * 选中某道路
+        * @method locateCar
+        * @param  {Object} adminLayerSelect 选中的事件对象
+        * @param  {Object} tempRoadlayer 需要选中的图层对象
+        */
         locateRoad: function (adminLayerSelect,tempRoadlayer) {
             var selectedFeatures = adminLayerSelect.getFeatures();
             var roadFeature = this.roadFeatures;
@@ -2968,7 +3203,12 @@
                 console.log('没有路段数据');
             }
         },
-        //构建路段查询xml
+        /*
+        * 构建路段查询
+        * @method buildFilterBySigmentIds
+        * @param  {String} sigmentIds 路段id数组
+        * @return  {Object}  [{"propertyName":"OBJECTID","value":sigmentId}]
+        */
         buildFilterBySigmentIds: function (sigmentIds) {
         		var temp = [];
         		 for (var i = 0; i < sigmentIds.length; i++) {
@@ -2981,10 +3221,16 @@
             xml += '</Or></Filter>';*/
             return temp;
         }
+         /*
+        * 构建道路查询
+        * @method buildFilterByRoadIds
+        * @param  {String} roadIds 道路id数组
+        * @return  {Object}  [{"propertyName":"ROAD_ID","value":roadId}]
+        */
         ,buildFilterByRoadIds: function (roadIds) {
         	var temp = [];
-        		 for (var i = 0; i < sigmentIds.length; i++) {
-        		 	temp.push({"propertyName":"ROAD_ID","value":sigmentIds[i]});
+        		 for (var i = 0; i < roadIds.length; i++) {
+        		 	temp.push({"propertyName":"ROAD_ID","value":roadIds[i]});
         		}
             /*var xml = '<Filter xmlns="http://www.opengis.net/ogc"><Or>';
             for (var i = 0; i < roadIds.length; i++) {
@@ -2998,6 +3244,7 @@
 }));
 /**
  * 为聚合图层画canvas图
+ * @method dcanvas
  * @param {*} ele
  * @param {*} data
  */
@@ -3054,6 +3301,7 @@ function dcanvas(ele, data) {
 
 /**
  * 为聚合图层画canvas图
+ * @method dcanvas
  * @param {*} ele
  * @param {*} data
  */
