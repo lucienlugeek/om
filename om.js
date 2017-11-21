@@ -24,7 +24,7 @@
  *      @param {List} ops.layers 初始渲染的图层 例：[grouplayer,poiLayer]
  *      @param {Object} ops.projection 坐标系对象 例：new ol.proj.Projection({code: 'EPSG:4326',units: 'degrees',});
  */
-    var OpenMap = this.OpenMap = function () {
+    var OpenMap = function () {
         if (arguments.length) {
             this.init.apply(this, arguments);
         }
