@@ -1,9 +1,9 @@
 ﻿// framework based on openlayers Version v4.0.1 with jQuery
 /**
-    基于openlayers的工具模块；
-    * 提供了常用的地图相关操作
-    @module om
-*/
+ * 基于openlayers的工具模块；
+ * 提供了常用的地图相关操作
+ * @module om
+ */
 (function (root, factory) {
     if (typeof exports === "object") {
         module.exports = factory();
@@ -14,16 +14,16 @@
     }
 }(this, function (ol) {
     /**
- * OpenMap 
- * @class OpenMap
- * @constructor
- * @param  {String} mapId 需要渲染的map的html documentId
- * @param  {Object} ops 
- * @param {List} ops.center 地图的中心点 例：[120.561477,31.883179]
- *      @param {int} ops.zoom 地图层级 例：15
- *      @param {List} ops.layers 初始渲染的图层 例：[grouplayer,poiLayer]
- *      @param {Object} ops.projection 坐标系对象 例：new ol.proj.Projection({code: 'EPSG:4326',units: 'degrees',});
- */
+     * OpenMap
+     * @class OpenMap
+     * @constructor
+     * @param  {String} mapId 需要渲染的map的html documentId
+     * @param  {Object} ops
+     * @param {List} ops.center 地图的中心点 例：[120.561477,31.883179]
+     * @param {int} ops.zoom 地图层级 例：15
+     * @param {List} ops.layers 初始渲染的图层 例：[grouplayer,poiLayer]
+     * @param {Object} ops.projection 坐标系对象 例：new ol.proj.Projection({code: 'EPSG:4326',units: 'degrees',});
+     */
     var OpenMap = function () {
         if (arguments.length) {
             this.init.apply(this, arguments);
@@ -31,11 +31,11 @@
     };
 
     /**
-		 * 判断是否为 Object,Array,String,RegExp,Boolean,Number,Function
-		 * @method OpenMap.is
-		 * @param  {Object} arg1 需要判断的对象
-		 * @param  {String} content 需要判别是否的目标对象类型(Object,Array,String,RegExp,Boolean,Number,Function)
-		 */
+     * 判断是否为 Object,Array,String,RegExp,Boolean,Number,Function
+     * @method OpenMap.is
+     * @param  {Object} arg1 需要判断的对象
+     * @param  {String} content 需要判别是否的目标对象类型(Object,Array,String,RegExp,Boolean,Number,Function)
+     */
     OpenMap.is = function (arg1, arg2) {
         return Object.prototype.toString.call((arg1)) === '[object ' + arg2 + ']';
     };
@@ -60,7 +60,7 @@
     /**
      * 将openlayers 的geometry 转换为 jsts 对应的Geometry
      * @method OpenMap.olGeometry2JstsGeometry
-     * @param {Object} geometry openlayers对应的geometry 
+     * @param {Object} geometry openlayers对应的geometry
      */
     OpenMap.olGeometry2JstsGeometry = function (geometry) {
         //convert the OpenLayers geometry to a JSTS geometry
@@ -71,7 +71,7 @@
     /**
      * 将openlayers 的geometry 转换为 jsts 对应的Geometry
      * @method OpenMap.JstsGeometry2olGeometry
-     * @param {Object} geometry openlayers对应的geometry 
+     * @param {Object} geometry openlayers对应的geometry
      */
     OpenMap.JstsGeometry2olGeometry = function (jtstGeometry) {
         //convert the JSTS geometry to a OpenLayers geometry
@@ -99,7 +99,7 @@
      * @method OpenMap.convexHull
      * @param {Object} parser jsts.io.OL3Parser()
      * @param {Object} geometry ol geometry
-     * @return {Object} 返回包含几何形体的所有点的最小凸壳多边形（外包多边形） 
+     * @return {Object} 返回包含几何形体的所有点的最小凸壳多边形（外包多边形）
      */
     OpenMap.convexHull = function (parser, geometry) {
         //var parser = new jsts.io.OL3Parser();
@@ -241,7 +241,7 @@
     * 根据坐标对象数组获取闭包范围
     * @method OpenMap.getExtentByData
     * @param {Object} 坐标对象数组[{lon:131.00,lat:30},...]
-    * @return {Object} [minx,miny,maxx, maxy] 
+    * @return {Object} [minx,miny,maxx, maxy]
     */
     OpenMap.getExtentByData = function (data) {
         var minx = 180;
@@ -275,7 +275,7 @@
     * 根据坐标数组获取闭包范围
     * @method OpenMap.getExtentByCoordinates
     * @param {Object} 坐标数组 [[131.00,30],...]
-    * @return {Object} [minx,miny,maxx, maxy] 
+    * @return {Object} [minx,miny,maxx, maxy]
     */
     OpenMap.getExtentByCoordinates = function (data) {
         var minx = 180;
@@ -352,7 +352,7 @@
     /**
      *  计算多边形面积(单位平方米)
      * @method OpenMap.calcArea
-     * @param {Object} polygon 
+     * @param {Object} polygon
      * @return {Double} 面积(单位平方米)
      */
     OpenMap.calcArea = function (polygon) {
@@ -612,15 +612,15 @@
             });
         },
         /**
-            * 根据指定参数，初始化地图到容器中 
-            * @method init
-            * @param  {String} id 需要渲染的map的html documentId
-            * @param  {Object} options 
-            *			@param {List} options.center 地图的中心点 例：[120.561477,31.883179]
-            *      @param {int} options.zoom 地图层级 例：15
-            *      @param {List} options.layers 初始渲染的图层 例：[grouplayer,poiLayer]
-            *      @param {Object} options.projection 坐标系对象 例：new ol.proj.Projection({code: 'EPSG:4326',units: 'degrees',});
-            */
+        * 根据指定参数，初始化地图到容器中
+        * @method init
+        * @param {String} id 需要渲染的map的html documentId
+        * @param {Object} options
+        * @param {List} options.center 地图的中心点 例：[120.561477,31.883179]
+        * @param {int} options.zoom 地图层级 例：15
+        * @param {List} options.layers 初始渲染的图层 例：[grouplayer,poiLayer]
+        * @param {Object} options.projection 坐标系对象 例：new ol.proj.Projection({code: 'EPSG:4326',units: 'degrees',});
+        */
         init: function (id, options) {
             var ele = document.getElementById(typeof id === 'undefined' ? '' : id);
             if (ele === null) {
@@ -671,7 +671,7 @@
                 new ol.control.MousePosition({
                     className: 'custom-mouse-position',
                     target: document.getElementById('location'),
-                    coordinateFormat: ol.coordinate.createStringXY(6),//保留5位小数  
+                    coordinateFormat: ol.coordinate.createStringXY(6),//保留5位小数
                     undefinedHTML: ' '
                 }));
             self._map.addControl(new ol.control.ZoomSlider());
@@ -890,7 +890,7 @@
         /**
          * 根据id获取marker
          * @method getMarkerById
-         * @param  {String} id 
+         * @param  {String} id
          * @returns {Object} 返回id对应marker对象
          */
         getMarkerById: function (id) {
@@ -981,10 +981,10 @@
             self.addLayer(la, _layer).setVisible(vi);
         },
         /**
-            * 根据数据获取蜂巢图形要素
-            * @method getHoneycombGraphFeatures
+        * 根据数据获取蜂巢图形要素
+        * @method getHoneycombGraphFeatures
         * @param  {Object} option 需要创建的蜂巢图形参数
-            */
+        */
         getHoneycombGraphFeatures: function (option) {
             if (!option || !option.layerName || !option.data) {
                 console.error('必须指定绘制蜂巢图信息！');
@@ -1080,11 +1080,11 @@
                 //return features;
             }, 2000);
         },
-		/**
-		 * 根据数据获取网格图形要素
-		 * @method getGridFeatures
-     * @param  {Object} option 需要创建的网格图形参数
-		 */
+        /**
+         * 根据数据获取网格图形要素
+         * @method getGridFeatures
+         * @param  {Object} option 需要创建的网格图形参数
+        */
         getGridFeatures: function (option) {
             if (!option || !option.layerName || !option.data) {
                 console.error('必须指定绘制蜂巢图信息！');
@@ -1167,7 +1167,7 @@
         /**
          * 添加覆盖元素
          * @method addOverLay
-     		 * @param  {Object} option 需要创建的覆盖元素参数
+         * @param {Object} option 需要创建的覆盖元素参数
          */
         addOverLay: function (option) {
             if (!option || !option.position || !option.eid) {
@@ -1198,8 +1198,8 @@
         /**
          * 获取所有的覆盖元素
          * @method getOverlay
-         * @param  {String} id 覆盖元素id,如没传就返回所有
-     		 * @return  {Object|[]} 单个id覆盖元素or所有的覆盖元素
+         * @param {String} id 覆盖元素id,如没传就返回所有
+         * @return {Object|[]} 单个id覆盖元素or所有的覆盖元素
          */
         getOverlay: function () {
             if (arguments.length === 0) {
@@ -1213,7 +1213,7 @@
         /**
          * 增加饼状图
          * @method addChartOverlay
-         * @param  {Object} option 增加饼状图的参数
+         * @param {Object} option 增加饼状图的参数
          */
         addChartOverlay: function (option) {
             if (typeof option === 'undefined'
@@ -1228,7 +1228,7 @@
                 var pt = [parseFloat(data.lon), parseFloat(data.lat)];
                 var domid = option.domid + i;   //option.domid为map页面中增加overlay的div
                 $("#" + option.domid).append("<div id='" + domid + "'></div>");
-                //positioning:Possible values are 'bottom-left', 'bottom-center', 'bottom-right', 'center-left', 'center-center', 'center-right', 'top-left', 'top-center', and 'top-right'. 
+                //positioning:Possible values are 'bottom-left', 'bottom-center', 'bottom-right', 'center-left', 'center-center', 'center-right', 'top-left', 'top-center', and 'top-right'.
                 //Default is 'top-left'.
                 self.addChart(domid, data, 100);
 
@@ -1262,7 +1262,7 @@
                     height: size
                 },
                 tooltip: {
-                    //pointFormat: '{series.name}<b>{point.percentage:.1f}%</b>' 
+                    //pointFormat: '{series.name}<b>{point.percentage:.1f}%</b>'
                     formatter: function () {
                         return this.series.name + '<br/>' + '<b>' + this.point.name + '</b>: ' + parseInt(this.percentage) + ' %';
                     }
@@ -1343,11 +1343,11 @@
             }
             $("#" + option.domid).css("display", "block");
         },
-		/**
-    * 添加柱状图
-    * @method addBarGraph
-    * @param  {Object} option 需要创建的柱状图参数
-    */
+        /**
+        * 添加柱状图
+        * @method addBarGraph
+        * @param  {Object} option 需要创建的柱状图参数
+        */
         addBarGraph: function (domid, data, height, width, categories, unit, ytitle, color) {
             $('#' + domid).highcharts({
                 chart: {
@@ -1360,18 +1360,18 @@
                     width: width || 100,
                     height: height || 100
                 },
-                xAxis: { //x轴 
-                    categories: categories, //['柑橘', '香蕉','苹果', '梨子'],  //X轴类别 
-                    labels: { y: 18 },  //x轴标签位置：距X轴下方18像素 
+                xAxis: { //x轴
+                    categories: categories, //['柑橘', '香蕉','苹果', '梨子'],  //X轴类别
+                    labels: { y: 18 },  //x轴标签位置：距X轴下方18像素
                     visible: false
                 },
-                yAxis: {  //y轴 
+                yAxis: {  //y轴
                     title: { text: ytitle }, //y轴标题  '消费量（万吨）'
-                    lineWidth: 2, //基线宽度 
+                    lineWidth: 2, //基线宽度
                     visible: false
                 },
                 tooltip: {
-                    //pointFormat: '' + this.x + ': ' + this.y + '万吨' //'<b>{point.percentage:.1f}%</b>'  
+                    //pointFormat: '' + this.x + ': ' + this.y + '万吨' //'<b>{point.percentage:.1f}%</b>'
                     formatter: function () {
                         return '<b>' + this.x +
                             '</b>:<b>' + this.y + unit + '</b>';
@@ -1384,10 +1384,10 @@
                     text: ''
                 },
                 plotOptions: {
-                    /*pie: {  
-                        dataLabels: {  
-                            enabled: true  
-                        }  
+                    /*pie: {
+                        dataLabels: {
+                            enabled: true
+                        }
                     },*/
                     series: {
                         allowPointSelect: true
@@ -1403,8 +1403,8 @@
         },
         /**
          * 增加3d柱状图,需要引用3d.js包
-    		 * @method add3dBarGraphOverlay
-    		 * @param  {Object} option 需要创建的3d柱状图参数
+         * @method add3dBarGraphOverlay
+         * @param  {Object} option 需要创建的3d柱状图参数
          */
         add3dBarGraphOverlay: function (option) {
             if (typeof option === 'undefined'
@@ -1429,10 +1429,10 @@
             }
             $("#" + option.domid).css("display", "block");
         },
-		/**
+        /**
          * 添加3d柱状图
          * @method add3dBarGraph
-    		 * @param  {Object} option 需要创建的3d柱状图参数
+         * @param  {Object} option 需要创建的3d柱状图参数
          */
         add3dBarGraph: function (domid, data, height, width, categories, unit, ytitle, color) {
             $('#' + domid).highcharts({
@@ -1452,18 +1452,18 @@
                         depth: 50
                     }
                 },
-                xAxis: { //x轴 
-                    categories: categories, //['柑橘', '香蕉','苹果', '梨子'],  //X轴类别 
-                    //labels:{y:18},  //x轴标签位置：距X轴下方18像素 
+                xAxis: { //x轴
+                    categories: categories, //['柑橘', '香蕉','苹果', '梨子'],  //X轴类别
+                    //labels:{y:18},  //x轴标签位置：距X轴下方18像素
                     visible: false
                 },
-                yAxis: {  //y轴 
+                yAxis: {  //y轴
                     title: { text: ytitle }, //y轴标题  '消费量（万吨）'
-                    lineWidth: 2, //基线宽度 
+                    lineWidth: 2, //基线宽度
                     visible: false
                 },
                 tooltip: {
-                    //pointFormat: '' + this.x + ': ' + this.y + '万吨' //'<b>{point.percentage:.1f}%</b>'  
+                    //pointFormat: '' + this.x + ': ' + this.y + '万吨' //'<b>{point.percentage:.1f}%</b>'
                     formatter: function () {
                         return '<b>' + this.x +
                             '</b>:<b>' + this.y + unit + '</b>';
@@ -1487,10 +1487,10 @@
                         depth: 50,
                         enableMouseTracking: false // 关闭鼠标跟踪，对应的提示框、点击事件会失效
                     },
-                    /*pie: {  
-                         dataLabels: {  
-                             enabled: true  
-                         }  
+                    /*pie: {
+                         dataLabels: {
+                             enabled: true
+                         }
                      }, */
                     series: {
                         allowPointSelect: true
@@ -1508,7 +1508,7 @@
         /**
          * 移除marker
          * @method removeMarker
-    		 * @param  {Object} m 需要移除marker对象
+         * @param  {Object} m 需要移除marker对象
          */
         removeMarker: function (m) {
             if (typeof m === 'undefined' || !OpenMap.is(m, 'Object')) {
@@ -1522,7 +1522,7 @@
         /**
          * 增加动画效果Overlay
          * @method addAnimationOverlay
-    		 * @param  {Object} option 需要增加动画效果Overlay参数
+         * @param  {Object} option 需要增加动画效果Overlay参数
          */
         addAnimationOverlay: function (option) {
             if (typeof option === 'undefined'
@@ -1556,7 +1556,7 @@
         /**
          * 增加图片Overlay
          * @method addImageOverlay
-    		 * @param  {Object} option 增加图片Overlay参数
+         * @param  {Object} option 增加图片Overlay参数
          */
         addImageOverlay: function (option) {
             if (typeof option === 'undefined'
@@ -1573,7 +1573,7 @@
                 if (option.imageheight && option.imagewidth) {
                     img = new Image(option.imageheight, option.imagewidth);
                 } else {
-                    img = new Image();//69,52 设置大小会自动缩放图片，不设置则根据实际大小显示 
+                    img = new Image();//69,52 设置大小会自动缩放图片，不设置则根据实际大小显示
                 }
                 img.src = data.src;
                 img.style.border = option.border || "0px solid #058a8f";
@@ -1591,10 +1591,10 @@
             }
             $("#" + option.domid).css("display", "block");
         },
-		/**
-		 * 导出图片,需要引用FileSaver.min.js
-		 * @method exportPicture
-		 */
+        /**
+         * 导出图片,需要引用FileSaver.min.js
+         * @method exportPicture
+         */
         exportPicture: function () {
             var self = this;
             self._map.once('postcompose', function (event) {
@@ -1609,10 +1609,10 @@
             });
             self._map.renderSync();
         },
-		/**
-		 * 导出pdf
-		 * @method exportPdf
-		 */
+        /**
+         * 导出pdf
+         * @method exportPdf
+         */
         exportPdf: function (source, buttonId, format, resolution) {
             var self = this;
             var map = self._map;
@@ -1693,55 +1693,55 @@
         },
         measure: function (measureType, layerName) {
             var self = this;
-			/**
-			 * Currently drawn feature.
-			 * @type {ol.Feature}
-			 */
+            /**
+             * Currently drawn feature.
+             * @type {ol.Feature}
+             */
             //self.sketch =null;
-			/**
-			 * The help tooltip element.
-			 * @type {Element}
-			 */
+            /**
+             * The help tooltip element.
+             * @type {Element}
+             */
             //self.helpTooltipElement=null;
-			/**
-			 * Overlay to show the help messages.
-			 * @type {ol.Overlay}
-			 */
+            /**
+             * Overlay to show the help messages.
+             * @type {ol.Overlay}
+             */
             //self.helpTooltip=null;
-			/**
-			 * The measure tooltip element.
-			 * @type {Element}
-			 */
+            /**
+             * The measure tooltip element.
+             * @type {Element}
+             */
             //self.measureTooltipElement=null;
-			/**
-			 * Overlay to show the measurement.
-			 * @type {ol.Overlay}
-			 */
+            /**
+             * Overlay to show the measurement.
+             * @type {ol.Overlay}
+             */
             //self.measureTooltip=null;
             //self.measuredraw=null;// global so we can remove it later
             if (self.measuredraw) {
                 self._map.removeInteraction(self.measuredraw);
             }
 
-			/**
-			 * Message to show when the user is drawing a polygon.
-			 * @type {string}
-			 */
+            /**
+             * Message to show when the user is drawing a polygon.
+             * @type {string}
+             */
             var continuePolygonMsg = 'Click to continue drawing the polygon';
 
-			/**
-			 * Message to show when the user is drawing a line.
-			 * @type {string}
-			 */
+            /**
+             * Message to show when the user is drawing a line.
+             * @type {string}
+             */
             var continueLineMsg = 'Click to continue drawing the line';
             var map = self._map;
 
             var measureLayer = self.getLayer(layerName);
             if (null == measureLayer) return;
-			/**
-			 * Handle pointer move.
-			 * @param {ol.MapBrowserEvent} evt The event.
-			 */
+            /**
+             * Handle pointer move.
+             * @param {ol.MapBrowserEvent} evt The event.
+             */
             var pointerMoveHandler = function (evt) {
                 if (evt.dragging) {
                     return;
@@ -1764,12 +1764,12 @@
                 self.helpTooltipElement.classList.remove('hidden');
             };
 
-			/**
-			 * 计算线的长度（内部函数）
-			 * @method formatLength
-			 * @param {ol.geom.LineString} 线对象.
-			 * @return {string} 返回线的长度.
-			 */
+            /**
+             * 计算线的长度（内部函数）
+             * @method formatLength
+             * @param {ol.geom.LineString} 线对象.
+             * @return {string} 返回线的长度.
+             */
             var formatLength = function (line) {
                 var length;
                 if (true) {
@@ -1797,12 +1797,12 @@
             };
 
 
-			/**
-			 * 计算面面积（内部函数）
-			 * @method formatArea
-			 * @param {ol.geom.Polygon} 面对象.
-			 * @return {string} 返回面积.
-			 */
+            /**
+             * 计算面面积（内部函数）
+             * @method formatArea
+             * @param {ol.geom.Polygon} 面对象.
+             * @return {string} 返回面积.
+             */
             var formatArea = function (polygon) {
                 var area;
                 if (true) {
@@ -1944,7 +1944,7 @@
         /**
          *  移除指定layer，从而移除依载该layer的所有marker
          * @method removeMarkerByLayer
-			 	 * @param {string} layerName 需要移除对应层上的所有marker的层名
+         * @param {string} layerName 需要移除对应层上的所有marker的层名
          */
         removeMarkerByLayer: function (layerName) {
             if (typeof layerName === 'undefined') {
@@ -1959,7 +1959,7 @@
         /**
          *  移除指定id的marker
          * @method removeMarkerById
-			 	 * @param {string} id 需要移除指定id的marker
+         * @param {string} id 需要移除指定id的marker
          */
         removeMarkerById: function (id) {
             if (typeof id === 'undefined') {
@@ -2026,7 +2026,7 @@
             map.getView().setCenter(newCenter);
         },
         /**
-         *  添加layer的监听事件
+         * 添加layer的监听事件
          * @method addLayerListener
          * @param {Object} layer 添加layer的监听事件的层对象
          */
@@ -2059,9 +2059,9 @@
             return layerSelect;
         },
         /**
-         *  开启绘画功能
+         * 开启绘画功能
          * @method openDraw
-         * @param {String} type 点、线、矩形、多边形、圆（Point|LineString|Box|Polygon|Circle） 
+         * @param {String} type 点、线、矩形、多边形、圆（Point|LineString|Box|Polygon|Circle）
          * @param {events} events drawstart,drawend,change,propertychange
          */
         openDraw: function (type, events) {
@@ -2125,7 +2125,7 @@
             }
         },
         /**
-         *  返回绘画对象
+         * 返回绘画对象
          * @method getDraw
          * @return {Object} 返回绘画对象
          */
@@ -2133,7 +2133,7 @@
             return this._draw;
         },
         /**
-         *  关闭绘画功能
+         * 关闭绘画功能
          * @method closeDraw
          */
         closeDraw: function () {
@@ -2142,9 +2142,9 @@
             }
         },
         /**
-         *  开启绘画功能
+         * 开启绘画功能
          * @method oDraw
-         * @param {String} type 点、线、矩形、多边形、圆（Point|LineString|Box|Polygon|Circle） 
+         * @param {String} type 点、线、矩形、多边形、圆（Point|LineString|Box|Polygon|Circle）
          * @param {events} events drawstart,drawend,change,propertychange
          */
         oDraw: function (layerName, type, events) {
@@ -2173,7 +2173,7 @@
             //开启捕捉功能
             self.editSnap = new ol.interaction.Snap({
                 source: layer.getSource(),
-                //features: self.selectSource,  
+                //features: self.selectSource,
                 pixelTolerance: 15
             });
             map.addInteraction(self.editSnap);
@@ -2222,10 +2222,10 @@
                  var names = selectedFeatures.getArray().map(function(feature) {
                    return feature.get('ID');
                  });
-                  
+
                });*/
             /*self.editSelectFeature.getFeatures()=[];
-            self.selectSource = new ol.Collection();   	
+            self.selectSource = new ol.Collection();
             self.currentFeature=null;*/
         },
         /**
@@ -2318,7 +2318,7 @@
             }
         },
         /**
-         *  开启编辑功能
+         * 开启编辑功能
          * @method oEditor
          * @param {String} layerName 需要编辑的层名称
          * @param {events} events 需要编辑的层事件
@@ -2365,23 +2365,22 @@
                 });
             }
             /*//初始化变量
-            self.selectSource = new ol.Collection();   	
+            self.selectSource = new ol.Collection();
             self.currentFeature=null;
-            
+
             self.closeEditor();
             self.editSelectFeature = new ol.interaction.Select({
-    		    condition: ol.events.condition.singleClick,
-    			layers:[layer],
-    		    style:new ol.style.Style({
-    		        
-    		    	fill:new ol.style.Fill({
-    		            color:'rgba(255, 255, 255, 0.6)'
-    		          }),
-    		          stroke:new ol.style.Stroke({
-    		            color:'rgba(0, 255, 255, 0.6)'
-    		          })
-    		        })
-    		});*/
+                condition: ol.events.condition.singleClick,
+                layers:[layer],
+                style:new ol.style.Style({
+                    fill:new ol.style.Fill({
+                    color:'rgba(255, 255, 255, 0.6)'
+              }),
+              stroke:new ol.style.Stroke({
+                color:'rgba(0, 255, 255, 0.6)'
+              })
+            })
+    });*/
 
             self.editFeatureInteraction = new ol.interaction.Modify({
                 features: self.selectSource,
@@ -2397,12 +2396,12 @@
 
             self.editSnap = new ol.interaction.Snap({
                 source: layer.getSource(),
-                //features: self.selectSource,  
+                //features: self.selectSource,
                 pixelTolerance: 15
             });
 
 
-            //置于顶层  ---可不要 		
+            //置于顶层  ---可不要
             if (layer) {
                 map.removeLayer(layer);
                 map.addLayer(layer);  //置于顶层
@@ -2415,13 +2414,13 @@
             /*    		if (self.editSelectFeature != null) {
                         map.addInteraction(self.editSelectFeature);
                         self.editSelectFeature.on('select', function(evt) {
-                        	
+
                             self.selectSource.forEach(function (feature){
                             if(!feature){
-                                self.selectSource.remove(feature);	
-                            }			
+                                self.selectSource.remove(feature);
+                            }
                             });
-                    	
+
                         if(evt.selected.length>0){
                             evt.selected.forEach(function (feature) {
                                 if(feature){
@@ -2429,7 +2428,7 @@
                                }
                             });
                         }
-                    	
+
                         if(evt.deselected.length>0){
                             evt.deselected.forEach(function (feature) {
                                 if(feature){
@@ -2437,7 +2436,7 @@
                                 }
                             });
                         }
-                    	
+
                         if(self.selectSource.getLength()>0){
                             self.iniEditingStyle();
                         }else{
@@ -2584,7 +2583,7 @@
                     //features[1] = new ol.Feature({geometry:new ol.geom.Point(cPnts)});
                 }
                 for (var i = 0; i < len; i++) {
-                    //var id = 'p-helper-control-point-div' + '-' + i;	       
+                    //var id = 'p-helper-control-point-div' + '-' + i;
                     features[i] = new ol.Feature({ geometry: new ol.geom.Point(cPnts[i]), });
                 }
                 self.tempEditLayer.getSource().addFeatures(features);
@@ -2909,7 +2908,7 @@
 
         },
         /**
-         *  添加vector图层选择事件
+         * 添加vector图层选择事件
          * @method addLayerSelectListener
          * @param  {String} layerName 需要添加事件的图层名称
          * @param  {Object} selectCondition 需要添加的事件对象
@@ -2999,7 +2998,7 @@
             var offsetX = 0;
             var offsetY = 10;
             var weight = "60"; //normal  bold  100
-            var rotation = "0";//feature.get('rotation');  
+            var rotation = "0";//feature.get('rotation');
             var font = weight + ' ' + size + ' ' + "Arial";  //
             var fillColor = '#4293ee';
             var outlineColor = '#4293ee';
@@ -3116,12 +3115,12 @@
                 }
             }
         },
-        /*
-       * 选中某道路
-       * @method locateCar
-       * @param  {Object} adminLayerSelect 选中的事件对象
-       * @param  {Object} tempRoadlayer 需要选中的图层对象
-       */
+        /**
+         * 选中某道路
+         * @method locateCar
+         * @param  {Object} adminLayerSelect 选中的事件对象
+         * @param  {Object} tempRoadlayer 需要选中的图层对象
+         */
         locateRoad: function (adminLayerSelect, tempRoadlayer) {
             var selectedFeatures = adminLayerSelect.getFeatures();
             var roadFeature = this.roadFeatures;
@@ -3134,7 +3133,7 @@
 
                 for (var i = 0; i < roadFeature.length; i++) {
                     selectedFeatures.push(roadFeature[i]);
-                    //添加路段的两个端点，若是重复则删除存放的同样的端点，不重复则增加  
+                    //添加路段的两个端点，若是重复则删除存放的同样的端点，不重复则增加
                     //判断第一个点
                     var geo = roadFeature[i].getGeometry();
                     var coordinates = geo.getCoordinates();
@@ -3191,12 +3190,12 @@
                 console.log('没有路段数据');
             }
         },
-        /*
-        * 构建路段查询
-        * @method buildFilterBySigmentIds
-        * @param  {String} sigmentIds 路段id数组
-        * @return  {Object}  [{"propertyName":"OBJECTID","value":sigmentId}]
-        */
+        /**
+         * 构建路段查询
+         * @method buildFilterBySigmentIds
+         * @param  {String} sigmentIds 路段id数组
+         * @return  {Object}  [{"propertyName":"OBJECTID","value":sigmentId}]
+         */
         buildFilterBySigmentIds: function (sigmentIds) {
             var temp = [];
             for (var i = 0; i < sigmentIds.length; i++) {
@@ -3208,14 +3207,14 @@
             }
             xml += '</Or></Filter>';*/
             return temp;
-        }
-        /*
-       * 构建道路查询
-       * @method buildFilterByRoadIds
-       * @param  {String} roadIds 道路id数组
-       * @return  {Object}  [{"propertyName":"ROAD_ID","value":roadId}]
-       */
-        , buildFilterByRoadIds: function (roadIds) {
+        },
+        /**
+         * 构建道路查询
+         * @method buildFilterByRoadIds
+         * @param {String} roadIds 道路id数组
+         * @return {Object}  [{"propertyName":"ROAD_ID","value":roadId}]
+         */
+        buildFilterByRoadIds: function (roadIds) {
             var temp = [];
             for (var i = 0; i < roadIds.length; i++) {
                 temp.push({ "propertyName": "ROAD_ID", "value": roadIds[i] });
