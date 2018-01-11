@@ -7,7 +7,7 @@ const config = {
     "dest": "./docs",
     "debug": true,
     "app": {
-        "base": "/"
+        "base": "/om"
     },
     template: {
         // Template-specific options
