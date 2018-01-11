@@ -6,6 +6,9 @@ const config = {
     ],
     "dest": "./docs",
     "debug": true,
+    "app": {
+        "base": "/"
+    },
     template: {
         // Template-specific options
         options: {
