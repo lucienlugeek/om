@@ -5,6 +5,7 @@ const config = {
         "./om.js"
     ],
     "dest": "./docs",
+    "debug": true,
     template: {
         // Template-specific options
         options: {
@@ -35,11 +36,11 @@ const config = {
                     items: [
                         {
                             label: "Source Code",
-                            href: "git@github.com:lucienlugeek/om.git"
+                            href: "#"
                         },
                         {
                             label: "Zip",
-                            href: "https://codeload.github.com/lucienlugeek/om/zip/lite"
+                            href: "https://codeload.github.com/lucienlugeek/om/zip/master"
                         }
                     ]
                 },
