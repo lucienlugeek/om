@@ -1,4 +1,32 @@
-﻿/**
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: om.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: om.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>﻿/**
  * 基于openlayers v4.0.1 的简单封装。
  * simple package based on openlayers v4.0.1.
  * @author lucienlugeek@gmail.com
@@ -8,7 +36,7 @@
 (function (root, factory) {
     if (typeof exports === "object") {
         module.exports = factory();
-    } else if (typeof define === 'function' && define.amd) {
+    } else if (typeof define === 'function' &amp;&amp; define.amd) {
         define(['ol'], factory);
     } else {
         root.OpenMap = factory(root.ol);
@@ -57,12 +85,12 @@
         var tmpx = 0.0;
         var tmpy = 0.0;
         var len = data.length;
-        for (var p = 0; p < len; p++) {
+        for (var p = 0; p &lt; len; p++) {
             tmpx = parseFloat(data[p]['lon']);
             if (tmpx >= maxx) {
                 maxx = tmpx;
             }
-            if (tmpx < minx) {
+            if (tmpx &lt; minx) {
                 minx = tmpx;
             }
 
@@ -70,7 +98,7 @@
             if (tmpy >= maxy) {
                 maxy = tmpy;
             }
-            if (tmpy <= miny) {
+            if (tmpy &lt;= miny) {
                 miny = tmpy;
             }
         }
@@ -92,12 +120,12 @@
         var tmpx = 0.0;
         var tmpy = 0.0;
         var len = data.length;
-        for (var p = 0; p < len; p++) {
+        for (var p = 0; p &lt; len; p++) {
             tmpx = parseFloat(data[p][0]);
             if (tmpx >= maxx) {
                 maxx = tmpx;
             }
-            if (tmpx < minx) {
+            if (tmpx &lt; minx) {
                 minx = tmpx;
             }
 
@@ -105,7 +133,7 @@
             if (tmpy >= maxy) {
                 maxy = tmpy;
             }
-            if (tmpy <= miny) {
+            if (tmpy &lt;= miny) {
                 miny = tmpy;
             }
         }
@@ -284,7 +312,7 @@
          */
         globalHeatmapLayer: function (options) {
             var features = [];
-            if (options && options.data) {
+            if (options &amp;&amp; options.data) {
                 $.each(options.data, function (index, tempData) {
                     var coordinates = [parseFloat(tempData['lon']), parseFloat(tempData['lat'])];
                     features[index] = new ol.Feature({
@@ -297,9 +325,9 @@
                 source: new ol.source.Vector({
                     features: features
                 }),
-                gradient: options && options.gradient || ['#00f', '#0ff', '#0f0', '#ff0', '#f00'],
-                blur: options && options.blur || 30,
-                radius: options && options.radius || 30
+                gradient: options &amp;&amp; options.gradient || ['#00f', '#0ff', '#0f0', '#ff0', '#f00'],
+                blur: options &amp;&amp; options.blur || 30,
+                radius: options &amp;&amp; options.radius || 30
             });
         },
         /**
@@ -611,7 +639,7 @@
             var len = arg.length;
             var features = new Array(len);
             var la, vi; //layername visible
-            for (var i = 0; i < len; i++) {
+            for (var i = 0; i &lt; len; i++) {
                 if (!la) {
                     la = arg[i].layerName
                 }
@@ -641,14 +669,14 @@
                         i = 0,
                         normalSize = 0;
                     var size = feas.length;
-                    for (; i < size; i++) {
+                    for (; i &lt; size; i++) {
                         normalSize = normalSize + (feas[i].getProperties().status)
                     }
                     var rO, rI;
                     if (size >= 100) {
                         rO = 44;
                         rI = 33;
-                    } else if (size >= 10 && size <= 99) {
+                    } else if (size >= 10 &amp;&amp; size &lt;= 99) {
                         rO = 32;
                         rI = 24;
                     } else {
@@ -849,7 +877,7 @@
                 geometryFunction: type === "Box" ? ol.interaction.Draw.createBox() : undefined
             });
             map.addInteraction(self._draw);
-            if (events && !OpenMap.is(events, 'Object')) {
+            if (events &amp;&amp; !OpenMap.is(events, 'Object')) {
                 console.warn('Event parameter is invalid！');
             } else {
                 for (var e in events) {
@@ -881,4 +909,26 @@
         }
     };
     return OpenMap;
-}));
+}));</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#addCluster">addCluster</a></li><li><a href="global.html#addLayer">addLayer</a></li><li><a href="global.html#addLayerListener">addLayerListener</a></li><li><a href="global.html#addMarker">addMarker</a></li><li><a href="global.html#addMarkers">addMarkers</a></li><li><a href="global.html#addOverLay">addOverLay</a></li><li><a href="global.html#closeDraw">closeDraw</a></li><li><a href="global.html#getDraw">getDraw</a></li><li><a href="global.html#getLayer">getLayer</a></li><li><a href="global.html#getMap">getMap</a></li><li><a href="global.html#getMarkerById">getMarkerById</a></li><li><a href="global.html#getOverlay">getOverlay</a></li><li><a href="global.html#getPointStyle">getPointStyle</a></li><li><a href="global.html#getPolyStyle">getPolyStyle</a></li><li><a href="global.html#getProjection">getProjection</a></li><li><a href="global.html#getProjectionCode">getProjectionCode</a></li><li><a href="global.html#globalGroupLayer">globalGroupLayer</a></li><li><a href="global.html#globalHeatmapLayer">globalHeatmapLayer</a></li><li><a href="global.html#globalImageLayer">globalImageLayer</a></li><li><a href="global.html#globalTileLayer">globalTileLayer</a></li><li><a href="global.html#globalVectorLayer">globalVectorLayer</a></li><li><a href="global.html#init">init</a></li><li><a href="global.html#openDraw">openDraw</a></li><li><a href="global.html#removeMarker">removeMarker</a></li><li><a href="global.html#removeMarkerById">removeMarkerById</a></li><li><a href="global.html#removeMarkerByLayer">removeMarkerByLayer</a></li><li><a href="global.html#removeOverlayByIndexOfId">removeOverlayByIndexOfId</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Thu Jan 11 2018 15:08:34 GMT+0800 (CST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
