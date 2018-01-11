@@ -5,9 +5,8 @@ const config = {
         "./om.js"
     ],
     "dest": "./docs",
-    "debug": true,
     "app": {
-        "base": "/om"
+        "base": "/om" //for github page
     },
     template: {
         // Template-specific options
