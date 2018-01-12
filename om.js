@@ -1,7 +1,7 @@
 ﻿/**
  * 基于openlayers v4.0.1 的简单封装。
  * simple package based on openlayers v4.0.1.
- * @author lucienlugeek@gmail.com
+ * @author lucienlugeek lucienlugeek@gmail.com
  * @description provide common functions on map.
  */
 
