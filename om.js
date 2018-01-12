@@ -30,10 +30,10 @@
     };
 
     /**
-     * 检查类型
-     * 注意：NaN会判断为Number类型
-     * Check type.
-     * Be aware that NaN belongs to Number
+     * 检查类型  
+     * **注意**：NaN会判断为Number类型  
+     * Check type  
+     * **Be aware**: NaN belongs to Number
      * @method OpenMap.is
      * @param  {Object} toBeChecked parameter to be checked
      * @param  {String} type Object,Array,String,RegExp,Boolean,Number,Function,Null,Undefined
@@ -331,12 +331,12 @@
          * 根据指定参数，初始化地图到容器中
          * Initialize map to container
          * @method init
-         * @param {String} id The map container's ID
-         * @param {Object} options
-         * @param {number[]} options.center center i.e: [120.561477,31.883179]
-         * @param {number} options.zoom zoom lever i.e: 15
-         * @param {Object[]} options.layers layers to be rendered i.e: [grouplayer,poiLayer]
-         * @param {Object} options.projection projection i.e: new ol.proj.Projection({code: 'EPSG:4326',units: 'degrees',});
+         * @param {String} id - The map container's ID
+         * @param {Object} options - options
+         * @param {number[]} options.center - center i.e: [120.561477,31.883179]
+         * @param {number} [options.zoom] - zoom lever i.e: 15
+         * @param {Object[]} [options.layers] - layers to be rendered i.e: [grouplayer,poiLayer]
+         * @param {Object} [options.projection] - projection i.e: new ol.proj.Projection({code: 'EPSG:4326',units: 'degrees',});
          */
         init: function (id, options) {
             var ele = document.getElementById(typeof id === 'undefined' ? '' : id);
@@ -596,11 +596,11 @@
             return null;
         },
         /**
-         * 添加聚合图层
+         * 添加聚合图层  
          * add cluster to map
          * @method addCluster
          * @deprecated this method is not very common for use
-         * @param  {Object} arg options for creating cluster
+         * @param {Object} arg options for creating cluster
          */
         addCluster: function (arg) {
             if (typeof arg === 'undefined' || !OpenMap.is(arg, 'Array')) {

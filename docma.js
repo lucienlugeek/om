@@ -6,10 +6,11 @@ const config = {
     ],
     "dest": "./docs",
     "app": {
-        "base": "/om"
+        "base": "/om",
+        "title": "OpenMap Documentation",
+        "entrance": "content:guide"
     },
     template: {
-        // Template-specific options
         options: {
             title: "OpenMap Library",
             sidebar: true,
@@ -23,7 +24,7 @@ const config = {
             navbar: true,
             navItems: [{
                     label: "Documentation",
-                    href: "#",
+                    href: "?api",
                     iconClass: "ico-book"
                 },
                 {
@@ -56,11 +57,25 @@ const config = {
 };
 const config1 = {
     "src": [
-        "./om.js"
+        "./om.js",
+        {
+            "guide": "./README.md"
+        }
     ],
     "dest": "./docs-local",
+    // "jsdoc": {
+    //     "plugins": [
+    //         "plugins/markdown"
+    //     ]
+    // },
+    // "markdown": {
+    //     "excludeTags": ["param"]
+    // },
+    "app": {
+        "title": "OpenMap Documentation",
+        "entrance": "content:guide"
+    },
     template: {
-        // Template-specific options
         options: {
             title: "OpenMap Library",
             sidebar: true,
@@ -74,7 +89,7 @@ const config1 = {
             navbar: true,
             navItems: [{
                     label: "Documentation",
-                    href: "#",
+                    href: "?api",
                     iconClass: "ico-book"
                 },
                 {

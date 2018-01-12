@@ -1,0 +1,22 @@
+{
+  "name": "om",
+  "version": "1.0.0",
+  "description": "Simple package based on openlayers v4.0.1",
+  "main": "om.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lucienlugeek/om.git"
+  },
+  "author": "lucienlugeek",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lucienlugeek/om/issues"
+  },
+  "homepage": "https://github.com/lucienlugeek/om#readme"
+}
