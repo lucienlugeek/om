@@ -2,7 +2,10 @@ const docma = require('docma');
 
 const config = {
     "src": [
-        "./om.js"
+        "./om.js",
+        {
+            "guide": "./README.md"
+        }
     ],
     "dest": "./docs",
     "app": {
