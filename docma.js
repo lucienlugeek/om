@@ -1,71 +1,71 @@
 const docma = require('docma');
 
 const config = {
-    "src": [
-        "./om.js",
+    'src': [
+        './om.js',
         {
-            "guide": "./README.md"
-        }
+            'guide': './README.md',
+        },
     ],
-    "dest": "./docs",
-    "app": {
-        "base": "/om",
-        "title": "OpenMap Documentation",
-        "entrance": "content:guide"
+    'dest': './docs',
+    'app': {
+        'base': '/om',
+        'title': 'OpenMap Documentation',
+        'entrance': 'content:guide',
     },
-    template: {
+    'template': {
         options: {
-            title: "OpenMap Library",
+            title: 'OpenMap Library',
             sidebar: true,
             collapsed: false,
             badges: true,
             search: true,
             toolbar: true,
             symbolMeta: true,
-            outline: "tree",
+            outline: 'tree',
             animations: true,
             navbar: true,
             navItems: [{
-                    label: "Documentation",
-                    href: "?api",
-                    iconClass: "ico-book"
+                    label: 'Documentation',
+                    href: '?api',
+                    iconClass: 'ico-book',
                 },
                 {
-                    label: "Demos",
-                    href: "#",
-                    iconClass: "ico-mouse-pointer"
+                    label: 'Demos',
+                    href: '#',
+                    iconClass: 'ico-mouse-pointer',
                 },
                 {
-                    label: "Download",
-                    iconClass: "ico-md ico-download",
+                    label: 'Download',
+                    iconClass: 'ico-md ico-download',
                     items: [{
-                            label: "Source Code",
-                            href: "#"
+                            label: 'Source Code',
+                            href: '#',
                         },
                         {
-                            label: "Zip",
-                            href: "https://codeload.github.com/lucienlugeek/om/zip/master"
-                        }
-                    ]
+                            label: 'Zip',
+                            href: 'https://codeload.github.com/lucienlugeek/om/zip/master',
+                        },
+                    ],
                 },
                 {
-                    label: "GitHub",
-                    href: "https://github.com/lucienlugeek/om",
-                    target: "_blank",
-                    iconClass: "ico-md ico-github"
-                }
-            ]
-        }
-    }
+                    label: 'GitHub',
+                    href: 'https://github.com/lucienlugeek/om',
+                    target: '_blank',
+                    iconClass: 'ico-md ico-github',
+                },
+            ],
+        },
+    },
 };
 const config1 = {
-    "src": [
-        "./om.js",
+    'src': [
+        './om.js',
         {
-            "guide": "./README.md"
-        }
+            'guide': './README.md',
+        },
     ],
-    "dest": "./docs-local",
+    'dest': './docs-local',
     // "jsdoc": {
     //     "plugins": [
     //         "plugins/markdown"
@@ -74,63 +74,63 @@ const config1 = {
     // "markdown": {
     //     "excludeTags": ["param"]
     // },
-    "app": {
-        "title": "OpenMap Documentation",
-        "entrance": "content:guide"
+    'app': {
+        'title': 'OpenMap Documentation',
+        'entrance': 'content:guide',
     },
-    template: {
+    'template': {
         options: {
-            title: "OpenMap Library",
+            title: 'OpenMap Library',
             sidebar: true,
             collapsed: false,
             badges: true,
             search: true,
             toolbar: true,
             symbolMeta: true,
-            outline: "tree",
+            outline: 'tree',
             animations: true,
             navbar: true,
             navItems: [{
-                    label: "Documentation",
-                    href: "?api",
-                    iconClass: "ico-book"
+                    label: 'Documentation',
+                    href: '?api',
+                    iconClass: 'ico-book',
                 },
                 {
-                    label: "Demos",
-                    href: "#",
-                    iconClass: "ico-mouse-pointer"
+                    label: 'Demos',
+                    href: '#',
+                    iconClass: 'ico-mouse-pointer',
                 },
                 {
-                    label: "Download",
-                    iconClass: "ico-md ico-download",
+                    label: 'Download',
+                    iconClass: 'ico-md ico-download',
                     items: [{
-                            label: "Source Code",
-                            href: "#"
+                            label: 'Source Code',
+                            href: '#',
                         },
                         {
-                            label: "Zip",
-                            href: "https://codeload.github.com/lucienlugeek/om/zip/master"
-                        }
-                    ]
+                            label: 'Zip',
+                            href: 'https://codeload.github.com/lucienlugeek/om/zip/master',
+                        },
+                    ],
                 },
                 {
-                    label: "GitHub",
-                    href: "https://github.com/lucienlugeek/om",
-                    target: "_blank",
-                    iconClass: "ico-md ico-github"
-                }
-            ]
-        }
-    }
+                    label: 'GitHub',
+                    href: 'https://github.com/lucienlugeek/om',
+                    target: '_blank',
+                    iconClass: 'ico-md ico-github',
+                },
+            ],
+        },
+    },
 };
 
 docma.create()
     .build(config)
-    .catch(err => {
+    .catch((err) => {
         console.log(err);
     });
 docma.create()
     .build(config1)
-    .catch(err => {
+    .catch((err) => {
         console.log(err);
     });
