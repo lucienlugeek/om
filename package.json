@@ -18,5 +18,9 @@
   "bugs": {
     "url": "https://github.com/lucienlugeek/om/issues"
   },
-  "homepage": "https://github.com/lucienlugeek/om#readme"
+  "homepage": "https://github.com/lucienlugeek/om#readme",
+  "devDependencies": {
+    "eslint": "^4.19.0",
+    "eslint-config-google": "^0.9.1"
+  }
 }

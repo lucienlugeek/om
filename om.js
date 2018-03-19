@@ -503,15 +503,30 @@
                         features: [],
                         overlaps: false
                     }),
-                    style: function (fea) {
-                        return new ol.style.Style({
-                            image: new ol.style.Icon({
+                    style: (function () {
+                        var style = new ol.style.Style({
+                            text: new ol.style.Text({
+                                font: '12px Calibri,sans-serif',
+                                fill: new ol.style.Fill({
+                                    color: '#000'
+                                }),
+                                stroke: new ol.style.Stroke({
+                                    color: '#fff',
+                                    width: 3
+                                }),
+                                text: ''
+                            })
+                        });
+                        return function (feature) {
+                            style.setImage(new ol.style.Icon({
                                 rotation: fea.get('rotation') || 0,
                                 src: fea.get('image'),
                                 anchor: fea.get('anchor')
-                            })
-                        });
-                    },
+                            }));
+                            style.getText().setText(feature.get('text'));
+                            return style;
+                        }
+                    })(),
                     zIndex: (typeof option.zIndex !== 'undefined' ? option.zIndex : 0)
                 });
                 self.addLayer(option.layerName, _layer);
@@ -546,16 +561,29 @@
                 _layer = new ol.layer.Vector({
                     source: new ol.source.Vector(),
                     projection: self.getProjection(),
-                    style: function (feature) {
-                        return new ol.style.Style({
-                            image: new ol.style.Icon({
+                    style: (function () {
+                        var style = new ol.style.Style({
+                            text: new ol.style.Text({
+                                font: '12px Calibri,sans-serif',
+                                fill: new ol.style.Fill({
+                                    color: '#000'
+                                }),
+                                stroke: new ol.style.Stroke({
+                                    color: '#fff',
+                                    width: 3
+                                }),
+                                text: ''
+                            })
+                        });
+                        return function (feature) {
+                            style.setImage(new ol.style.Icon({
                                 rotation: feature.get('rotation') || 0,
                                 src: feature.get('image'),
                                 anchor: feature.get('anchor') || [0, 0]
-                            }),
-                            text: self.createTextStyle(feature.get('extData').hphm)
-                        });
-                    }
+                            }));
+                            style.getText().setText(feature.get('text'));
+                        }
+                    })()
                 });
             }
             var features = [];
