@@ -1,20 +1,17 @@
 
 <html><head></head><body><h1 id="openmap-om-">OpenMap(om)</h1>
 <hr />
-<p>Simple package based on openlayers v4.0.1.</p>
-<h2 id="1-prerequisite">1. Prerequisite</h2>
-<p>You need to include <a href="https://github.com/openlayers/openlayers">openlayers</a> first.This repo is just a simple package for easier to use openlayers.</p>
-<h2 id="2-use-it">2. Use it</h2>
-<pre><code class="lang-javascript">var proj = new ol.proj.Projection({
-    code: 'EPSG:4490',
-    units: 'degrees',
-});
-var mapOptions = {
-    layers: layerObject,
-    zoom: 15,
-    projection: proj
-};
-//mapId represents map container div's id
-var map = new OpenMap('mapId',mapOptions);
-</code></pre>
+<p>基于openlayers v4.0.1 API的二次封装库.</p>
+<h2 id="1-">1. 前提概要</h2>
+<p>在使用om.js之前，你需要引用 <a href="https://github.com/openlayers/openlayers">openlayers v4.0.3</a>。om.js是基于<a href="http://openlayers.org/en/latest/apidoc/">原生API</a>的二次封装，目的是更方便得使用openlayers.</p>
+<h2 id="2-">2. 主要功能</h2>
+<ul>
+<li>加载指定地图图层</li>
+<li>根据指定坐标，在地图上标记</li>
+<li>利用层的概念，批量管理标记，包括查找、修改、删除</li>
+<li>在地图上绘画，包括点、线、多边形、圆</li>
+</ul>
+<h2 id="3-">3. 附加说明</h2>
+<p>如果具备一定的英文基础与JS基础，建议优先使用官方提供的API。本项目是个人初次尝试写封装库，多有不足。欢迎 <strong>fork</strong> 与 <a href="https://github.com/lucienlugeek/om/issues">issue</a>。</p>
+<p><img class="docma emoji" src="https://twemoji.maxcdn.com/svg/1f449.svg" /> 文档地址：<a href="https://lucienlugeek.github.io/om/">https://lucienlugeek.github.io/om/</a></p>
 </body></html>
