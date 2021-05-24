@@ -1,4 +1,4 @@
-# OpenMap(om)
+# OpenMap(om)[项目终止]
 
 基于openlayers v4.0.1 API的二次封装库.
 
